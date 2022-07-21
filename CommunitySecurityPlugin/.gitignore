@@ -1,0 +1,6 @@
+*~
+.depend.*
+.obj
+.shobj
+GNUmakefile*
+*.dylib
