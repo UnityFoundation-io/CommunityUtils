@@ -1,0 +1,6 @@
+*~
+*.pem
+*.p7s
+*.csr
+serial*
+index*
