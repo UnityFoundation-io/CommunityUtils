@@ -17,20 +17,20 @@
 
 #include "TimeTypeSupportImpl.h"
 
-const char auth_ca_path[] = "file:./time_reader_security_docs/identity_ca.pem";
-const char perm_ca_path[] = "file:./time_reader_security_docs/permissions_ca.pem";
-const char id_cert_path[] = "file:./time_reader_security_docs/identity.pem";
-const char id_key_path[] = "file:./time_reader_security_docs/identity_key.pem";
-const char governance_path[] = "file:./time_reader_security_docs/governance.xml.p7s";
-const char permissions_path[] = "file:./time_reader_security_docs/permissions.xml.p7s";
+const char auth_ca_path[] = "file:time_reader_security_docs/identity_ca.pem";
+const char perm_ca_path[] = "file:time_reader_security_docs/permissions_ca.pem";
+const char id_cert_path[] = "file:time_reader_security_docs/identity.pem";
+const char id_key_path[] = "file:time_reader_security_docs/identity_key.pem";
+const char governance_path[] = "file:time_reader_security_docs/governance.xml.p7s";
+const char permissions_path[] = "file:time_reader_security_docs/permissions.xml.p7s";
 
 int
 ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 {
-  char* topic_name = getenv("TOPIC");
+  const char* topic_name = getenv("TOPIC");
   if (!topic_name) {
     ACE_ERROR((LM_ERROR, "TOPIC environment variable not set\n"));
-    return -1;
+    return EXIT_FAILURE;
   }
   ACE_DEBUG((LM_DEBUG, "TOPIC=%C\n", topic_name));
 
@@ -58,24 +58,18 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
                             OpenDDS::DCPS::DEFAULT_STATUS_MASK);
 
   if (!participant) {
-    ACE_ERROR_RETURN((LM_ERROR,
-                      ACE_TEXT("ERROR: %N:%l: main() -")
-                      ACE_TEXT(" create_participant failed!\n")),
-                     1);
+    ACE_ERROR((LM_ERROR, "ERROR: create_participant failed!\n"));
+    return EXIT_FAILURE;
   }
 
-  // Register Type (Messenger::Message)
   Time::CurrentTimeTypeSupport_var ts =
     new Time::CurrentTimeTypeSupportImpl;
 
   if (ts->register_type(participant, "") != DDS::RETCODE_OK) {
-    ACE_ERROR_RETURN((LM_ERROR,
-                      ACE_TEXT("ERROR: %N:%l: main() -")
-                      ACE_TEXT(" register_type failed!\n")),
-                     1);
+    ACE_ERROR((LM_ERROR, "ERROR: register_type failed!\n"));
+    return EXIT_FAILURE;
   }
 
-  // Create Topic (Movie Discussion List)
   CORBA::String_var type_name = ts->get_type_name();
   DDS::Topic_var topic =
     participant->create_topic(topic_name,
@@ -85,26 +79,19 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
                               OpenDDS::DCPS::DEFAULT_STATUS_MASK);
 
   if (!topic) {
-    ACE_ERROR_RETURN((LM_ERROR,
-                      ACE_TEXT("ERROR: %N:%l: main() -")
-                      ACE_TEXT(" create_topic failed!\n")),
-                     1);
+    ACE_ERROR((LM_ERROR, "ERROR: create_topic failed!\n"));
+    return EXIT_FAILURE;
   }
 
-  // Create Subscriber
   DDS::Subscriber_var subscriber =
     participant->create_subscriber(SUBSCRIBER_QOS_DEFAULT,
                                    0,
                                    OpenDDS::DCPS::DEFAULT_STATUS_MASK);
 
   if (!subscriber) {
-    ACE_ERROR_RETURN((LM_ERROR,
-                      ACE_TEXT("ERROR: %N:%l: main() -")
-                      ACE_TEXT(" create_subscriber failed!\n")),
-                     1);
+    ACE_ERROR((LM_ERROR, "ERROR: create_subscriber failed!\n"));
+    return EXIT_FAILURE;
   }
-
-  // Create DataReader
 
   DDS::DataReaderQos reader_qos;
   subscriber->get_default_datareader_qos(reader_qos);
@@ -117,20 +104,16 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
                                   OpenDDS::DCPS::DEFAULT_STATUS_MASK);
 
   if (!reader) {
-    ACE_ERROR_RETURN((LM_ERROR,
-                      ACE_TEXT("ERROR: %N:%l: main() -")
-                      ACE_TEXT(" create_datareader failed!\n")),
-                     1);
+    ACE_ERROR((LM_ERROR, "ERROR: create_datareader failed!\n"));
+    return EXIT_FAILURE;
   }
 
   Time::CurrentTimeDataReader_var reader_i =
     Time::CurrentTimeDataReader::_narrow(reader);
 
   if (!reader_i) {
-    ACE_ERROR_RETURN((LM_ERROR,
-                      ACE_TEXT("ERROR: %N:%l: main() -")
-                      ACE_TEXT(" _narrow failed!\n")),
-                     1);
+    ACE_ERROR((LM_ERROR, "ERROR: narrow failed!\n"));
+    return EXIT_FAILURE;
   }
 
   GuardWrapper wrapper;
@@ -148,13 +131,11 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   while (keep_going) {
     DDS::ReturnCode_t error = ws->wait(active, infinite);
     if (error != DDS::RETCODE_OK) {
-      ACE_ERROR((LM_ERROR,
-                 ACE_TEXT("ERROR: %N:%l: on_data_available() -")
-                 ACE_TEXT(" take_next_sample failed!\n")));
+      ACE_ERROR((LM_ERROR, "ERROR: wait failed!\n"));
       continue;
     }
 
-    for (int i = 0; keep_going && i != active.length(); ++i) {
+    for (unsigned int i = 0; keep_going && i != active.length(); ++i) {
       if (active[i] == cond) {
         Time::CurrentTime message;
         DDS::SampleInfo info;
@@ -166,9 +147,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
             std::cout << "Recv " << OpenDDS::DCPS::to_json(message) << std::endl;
           }
         } else {
-          ACE_ERROR((LM_ERROR,
-                     ACE_TEXT("ERROR: %N:%l: on_data_available() -")
-                     ACE_TEXT(" take_next_sample failed!\n")));
+          ACE_ERROR((LM_ERROR, "ERROR: take_next_sample failed!\n"));
         }
       } else {
         keep_going = false;
@@ -178,11 +157,8 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 
   ws->detach_condition(cond);
   ws->detach_condition(wrapper.guard());
-
-  // Clean-up!
   participant->delete_contained_entities();
   dpf->delete_participant(participant);
-
   TheServiceParticipant->shutdown();
 
   return 0;
