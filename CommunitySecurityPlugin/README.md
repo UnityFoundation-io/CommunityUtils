@@ -19,7 +19,7 @@ The IDL for the samples must be compiled with complete type object support.
 
 ## Building
 
-1. Build OpenDDS.
+1. Build OpenDDS with security enabled.
 2. Create a `setenv.sh` file that sources the OpenDDS setenv.sh.
 3. `source setenv.sh`
 4. `mwc.pl -type gnuace`

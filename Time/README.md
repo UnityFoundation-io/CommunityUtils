@@ -24,9 +24,14 @@ In the DDS Permissions Manager
 4. Grant write access on the topic to the writer.
 5. Grant read access on the topic to the reader.
 
+## Run-time Dependencies
+
+* curl
+* jq
+
 ## Running the Writer
 
-The `time_writer.sh` and `time_reader.sh` scripts download DDS Security Documents from the DDS Permissions Manager using `curl` and start an OpenDDS Particpant.
+The `time_writer.sh` script downloads DDS Security Documents from the DDS Permissions Manager and creates a DDS Participant that writes time samples.
 
 1. `source setenv.sh`
 2. `./time_writer.sh USERNAME PASSWORD TOPIC DPMGID`
@@ -34,7 +39,13 @@ The `time_writer.sh` and `time_reader.sh` scripts download DDS Security Document
    2. PASSWORD is the password for the application from Set up Step 1.
    3. TOPIC is the canonical topic name (see the application detail screen).
    4. DPMGID is the group id of writer application (see the application detail screen).
-3. `./time_reader.sh USERNAME PASSWORD TOPIC`
+
+## Running the Reader
+
+The `time_reader.sh` script downloads DDS Security Documents from the DDS Permissions Manager and creates a DDS Participant that reads time samples.
+
+1. `source setenv.sh`
+2. `./time_reader.sh USERNAME PASSWORD TOPIC`
    1. USERNAME is the username of the application from Set up Step 2 (see the application detail screen).
    2. PASSWORD is the password for the application from Set up Step 2.
    3. TOPIC is the canonical topic name (see the application detail screen).
