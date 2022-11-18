@@ -1,0 +1,33 @@
+project(*idl): dcps {
+  dcps_ts_flags += -Gxtypes-complete
+
+  TypeSupport_Files {
+    Time.idl
+  }
+
+  custom_only = 1
+}
+
+project(*Writer) : dcpsexe, dcps_tcp, dcps_rtps_udp, CommunitySecurityPlugin {
+  after    += *idl
+
+  TypeSupport_Files {
+    Time.idl
+  }
+
+  Source_Files {
+    TimeWriter.cpp
+  }
+}
+
+project(*Reader) : dcpsexe, dcps_tcp, dcps_rtps_udp, CommunitySecurityPlugin {
+  after    += *Writer
+
+  TypeSupport_Files {
+    Time.idl
+  }
+
+  Source_Files {
+    TimeReader.cpp
+  }
+}

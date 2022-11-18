@@ -79,13 +79,13 @@ private:
     }
 
     const OpenDDS::Security::SSL::SubjectName sn = get_subject_name(permissions_handle);
-    const OpenDDS::Security::SSL::SubjectName::const_iterator pos = sn.find("DPMGID");
+    const OpenDDS::Security::SSL::SubjectName::const_iterator pos = sn.find("SN");
     if (pos == sn.end()) {
-      return OpenDDS::Security::CommonUtilities::set_security_error(ex, -1, 0, "CommunityAccessControl::common_check: Subject name does not contain a DPMGID");
+      return OpenDDS::Security::CommonUtilities::set_security_error(ex, -1, 0, "CommunityAccessControl::common_check: Subject name does not contain a SN");
     }
 
     if (pos->second != dpmgid.in()) {
-      return OpenDDS::Security::CommonUtilities::set_security_error(ex, -1, 0, "CommunityAccessControl::common_check: dpmgid from sample does not match DPMGID from subject name");
+      return OpenDDS::Security::CommonUtilities::set_security_error(ex, -1, 0, "CommunityAccessControl::common_check: dpmgid from sample does not match SN from subject name");
     }
 
     return true;

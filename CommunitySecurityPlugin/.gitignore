@@ -4,3 +4,4 @@
 .shobj
 GNUmakefile*
 *.dylib
+setenv.sh

@@ -1,0 +1,12 @@
+#include <dds/DdsDcpsCore.idl>
+
+module Time {
+
+  const long TIME_DOMAIN = 1;
+
+  @topic
+  struct CurrentTime {
+    @key string dpmgid;
+    DDS::Time_t current_time;
+  };
+};
