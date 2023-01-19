@@ -1,0 +1,24 @@
+project: dcps_java, CommunitySecurityPluginJava {
+  idlflags += -SS -Wb,export_macro=JNIEXPORT -Wb,export_include=idl2jni_jni.h
+  idl2jniflags += -Wb,export_macro=JNIEXPORT -Wb,export_include=idl2jni_jni.h
+  dcps_ts_flags += -Wb,export_macro=JNIEXPORT -Gxtypes-complete
+
+  idlflags += -I..
+  idl2jniflags += -I..
+
+  IDL_Files {
+    ../Time.idl
+  }
+
+  Idl2Jni_Files {
+    ../Time.idl
+  }
+
+  TypeSupport_Files {
+    ../Time.idl
+  }
+
+  Java_Files {
+    TimeDemo
+  }
+}

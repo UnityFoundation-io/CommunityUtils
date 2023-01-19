@@ -1,0 +1,4 @@
+project: java {
+  after += CommunitySecurityPlugin
+  javacflags += -classpath $(COMMUNITY_SECURITY_PLUGIN_ROOT)/CommunitySecurityPlugin.jar
+}

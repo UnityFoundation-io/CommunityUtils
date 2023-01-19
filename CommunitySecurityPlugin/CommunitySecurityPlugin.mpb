@@ -2,4 +2,5 @@ project: opendds_security  {
   includes += $(COMMUNITY_SECURITY_PLUGIN_ROOT)
   libpaths += $(COMMUNITY_SECURITY_PLUGIN_ROOT)
   libs += CommunitySecurityPlugin
+  after += CommunitySecurityPlugin
 }

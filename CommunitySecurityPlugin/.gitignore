@@ -5,3 +5,5 @@
 GNUmakefile*
 *.dylib
 setenv.sh
+/classes
+*.jar
