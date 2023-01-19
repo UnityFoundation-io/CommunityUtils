@@ -42,7 +42,7 @@ public abstract class TimeWriter {
             } catch (InterruptedException ie) {
                 System.err.println("sleep: " + ie);
             }
-            Time_tHolder ct = new Time_tHolder();
+            Time_tHolder ct = new Time_tHolder(new Time_t());
             if (dp.get_current_time(ct) != RETCODE_OK.value) {
                 System.err.println("ERROR: failed to get time from DomainParticipant");
                 break;
