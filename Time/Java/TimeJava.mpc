@@ -1,4 +1,4 @@
-project: dcps_java {
+project: dcps_java, CommunitySecurityPluginJava {
   idlflags += -SS -Wb,export_macro=JNIEXPORT -Wb,export_include=idl2jni_jni.h
   idl2jniflags += -Wb,export_macro=JNIEXPORT -Wb,export_include=idl2jni_jni.h
   dcps_ts_flags += -Wb,export_macro=JNIEXPORT
@@ -19,7 +19,6 @@ project: dcps_java {
   }
 
   Java_Files {
-    javacflags += -classpath $(COMMUNITY_SECURITY_PLUGIN_ROOT)/CommunitySecurityPlugin.jar
     TimeDemo
   }
 }

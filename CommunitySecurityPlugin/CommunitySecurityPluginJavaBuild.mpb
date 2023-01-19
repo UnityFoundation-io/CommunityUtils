@@ -1,0 +1,12 @@
+feature(java) : java {
+  macros += COMMUNITYSECURITYPLUGIN_HAS_JAVA
+  includes += $(DDS_ROOT)/java/idl2jni/runtime
+
+  specific {
+    jarname = CommunitySecurityPlugin
+  }
+
+  Java_Files {
+    Community
+  }
+}
