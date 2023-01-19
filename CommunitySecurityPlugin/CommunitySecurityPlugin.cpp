@@ -133,6 +133,7 @@ void install_community_security_plugin()
 #ifdef COMMUNITYSECURITYPLUGIN_HAS_JAVA
 #include "idl2jni_jni.h"
 
+extern "C"
 JNIEXPORT void JNICALL Java_Community_SecurityPlugin_Install(JNIEnv*, jclass)
 {
   Community::install_community_security_plugin();
