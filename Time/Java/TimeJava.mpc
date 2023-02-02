@@ -6,6 +6,10 @@ project: dcps_java, CommunitySecurityPluginJava {
   idlflags += -I..
   idl2jniflags += -I..
 
+  specific {
+    jarname = DDS_TimeJava_TypeSupport
+  }
+
   IDL_Files {
     ../Time.idl
   }
