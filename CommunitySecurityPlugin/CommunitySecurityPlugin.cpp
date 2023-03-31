@@ -1,3 +1,4 @@
+// Copyright 2023 CommunityUtils Authors
 #include "CommunitySecurityPlugin.h"
 
 #include <dds/DCPS/security/AccessControlBuiltInImpl.h>
