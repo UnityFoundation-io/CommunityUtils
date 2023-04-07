@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright 2023 CommunityUtils Authors
 
 APPLICATION_ID=${1:?APPLICATION_ID is not set}
 APPLICATION_PASSWORD=${2:?APPLICATION_PASSWORD is not set}

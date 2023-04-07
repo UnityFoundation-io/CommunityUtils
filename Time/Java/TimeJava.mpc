@@ -1,3 +1,4 @@
+// Copyright 2023 CommunityUtils Authors
 project: dcps_java, CommunitySecurityPluginJava {
   idlflags += -SS -Wb,export_macro=JNIEXPORT -Wb,export_include=idl2jni_jni.h
   idl2jniflags += -Wb,export_macro=JNIEXPORT -Wb,export_include=idl2jni_jni.h

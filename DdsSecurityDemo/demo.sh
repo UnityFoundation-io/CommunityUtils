@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright 2023 CommunityUtils Authors
 
 ####################################################################################################
 # The following steps are not performed in the DDS Permissions Manager but are here for reference. #

@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright 2023 CommunityUtils Authors
 
 function download-all {
     local -r username="$1"

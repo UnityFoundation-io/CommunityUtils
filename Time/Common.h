@@ -1,6 +1,8 @@
 #ifndef TIME_COMMON_H
 #define TIME_COMMON_H
 
+// Copyright 2023 CommunityUtils Authors
+
 #include <dds/DCPS/GuardCondition.h>
 #include <dds/DCPS/security/framework/Properties.h>
 #include <dds/DdsDcpsCoreC.h>

@@ -1,3 +1,5 @@
+// Copyright 2023 CommunityUtils Authors
+
 #include "Common.h"
 
 #include <ace/Log_Msg.h>

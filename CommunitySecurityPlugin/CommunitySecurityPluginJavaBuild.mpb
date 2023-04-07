@@ -1,3 +1,4 @@
+// Copyright 2023 CommunityUtils Authors
 feature(java) : java {
   macros += COMMUNITYSECURITYPLUGIN_HAS_JAVA
   includes += $(DDS_ROOT)/java/idl2jni/runtime

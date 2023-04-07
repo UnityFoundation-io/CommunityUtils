@@ -1,4 +1,5 @@
 #!/bin/bash
+# Copyright 2023 CommunityUtils Authors
 
 USERNAME=${1:?USERNAME is not set}
 PASSWORD=${2:?PASSWORD is not set}

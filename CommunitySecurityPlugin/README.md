@@ -24,3 +24,5 @@ The IDL for the samples must be compiled with complete type object support.
 3. `source setenv.sh`
 4. `mwc.pl -type gnuace`
 5. `make`
+
+Copyright 2023 CommunityUtils Authors

@@ -1,3 +1,4 @@
+// Copyright 2023 CommunityUtils Authors
 package Community;
 public abstract class SecurityPlugin {
     public static native void Install();

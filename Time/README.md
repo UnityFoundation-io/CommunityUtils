@@ -49,3 +49,5 @@ The `time_reader.sh` script downloads DDS Security Documents from the DDS Permis
    1. USERNAME is the username of the application from Set up Step 2 (see the application detail screen).
    2. PASSWORD is the password for the application from Set up Step 2.
    3. TOPIC is the canonical topic name (see the application detail screen).
+
+Copyright 2023 CommunityUtils Authors

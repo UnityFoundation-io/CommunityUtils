@@ -26,3 +26,5 @@ The secrets can be updated by the following commands:
     gcloud secrets versions add permissions_ca_key_pem --data-file=permissions_ca_key.pem
     gcloud secrets versions add permissions_ca_pem --data-file=permissions_ca.pem
     gcloud secrets versions add governance_xml_p7s --data-file=governance.xml.p7s
+
+Copyright 2023 CommunityUtils Authors
