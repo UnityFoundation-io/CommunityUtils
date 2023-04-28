@@ -1,0 +1,5 @@
+// Copyright 2023 CommunityUtils Authors
+
+project: dcpsexe, HSDSCommon, install {
+    lit_libs += httpserver
+}

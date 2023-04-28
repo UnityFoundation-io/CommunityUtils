@@ -1,9 +1,7 @@
 # Copyright 2023 CommunityUtils Authors
-.depend.*
-.obj
-.shobj
+*~
+.depend*
+.shobj*
 GNUmakefile*
 *.dylib
-setenv.sh
-/classes
-*.jar
+.obj*

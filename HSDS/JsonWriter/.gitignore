@@ -1,6 +1,2 @@
 # Copyright 2023 CommunityUtils Authors
-/*.pem
-/*.p7s
-/*.csr
-/serial*
-/index*
+/JsonWriter

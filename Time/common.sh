@@ -27,4 +27,4 @@ EOF
     curl --silent -b cookies.txt ${DPM_URL}/api/applications/permissions.xml.p7s?nonce=NONCE > "${directory}/permissions.xml.p7s"
 }
 
-export DYLD_LIBRARY_PATH="${ACE_ROOT}/lib:${DDS_ROOT}/lib:${XERCESCROOT}/bin:${SSL_ROOT}/bin:${COMMUNITY_SECURITY_PLUGIN_ROOT}:./Java"
+export DYLD_LIBRARY_PATH="${ACE_ROOT}/lib:${DDS_ROOT}/lib:${XERCESCROOT}/bin:${SSL_ROOT}/bin:${COMMUNITY_UTILS_ROOT}/CommunitySecurityPlugin:./Java"

@@ -1,0 +1,426 @@
+// Copyright 2023 CommunityUtils Authors
+
+#include <tao/StringSeq.pidl>
+
+module HSDS3 {
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Organization {
+    @key string dpmgid;
+    @key string id;
+    string name;
+    string alternate_name;
+    string description;
+    string email;
+    string website;
+    string tax_status;
+    string tax_id;
+    long year_incorporated;
+    string legal_status;
+    string logo;
+    string uri;
+    string parent_organization_id;
+  };
+  const string ORGANIZATION_ENDPOINT = "/hsds3/organization";
+  const string ORGANIZATION_JSON_FILE = "organization.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct OrganizationIdentifier {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string identifier_scheme;
+    string identifier_type;
+    string identifier;
+  };
+  const string ORGANIZATION_IDENTIFIER_ENDPOINT = "/hsds3/organization_identifier";
+  const string ORGANIZATION_IDENTIFIER_JSON_FILE = "organization_identifier.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Program {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string name;
+    string alternate_name;
+    string description;
+  };
+  const string PROGRAM_ENDPOINT = "/hsds3/program";
+  const string PROGRAM_JSON_FILE = "program.json";
+
+  const string ServiceStatus_active = "active";
+  const string ServiceStatus_inactive = "inactive";
+  const string ServiceStatus_defunct = "defunct";
+  const string ServiceStatus_temporarily_closed = "temporarily closed";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Service {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string program_id;
+    string name;
+    string alternate_name;
+    string description;
+    string url;
+    string email;
+    string status;
+    string interpretation_services;
+    string application_process;
+    string fees_description;
+    string wait_time;
+    string fees;
+    string accreditations;
+    string eligibility_description;
+    long minimum_age;
+    long maximum_age;
+    string assured_date;
+    string assurer_email;
+    string licenses;
+    string alert;
+    string last_modified;
+  };
+  const string SERVICE_ENDPOINT = "/hsds3/service";
+  const string SERVICE_JSON_FILE = "service.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct _Attribute {
+    @key string dpmgid;
+    @key string id;
+    string link_id;
+    string taxonomy_term_id;
+    string link_type;
+    string link_entity;
+    string value;
+  };
+  const string ATTRIBUTE_ENDPOINT = "/hsds3/attribute";
+  const string ATTRIBUTE_JSON_FILE = "attribute.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct ServiceAtLocation {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string location_id;
+    string description;
+  };
+  const string SERVICE_AT_LOCATION_ENDPOINT = "/hsds3/service_at_location";
+  const string SERVICE_AT_LOCATION_JSON_FILE = "service_at_location.json";
+
+  const string LocationType_physical = "physical";
+  const string LocationType_postal = "postal";
+  const string LocationType_virtual = "virtual";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Location {
+    @key string dpmgid;
+    @key string id;
+    string location_type;
+    string url;
+    string organization_id;
+    string name;
+    string alternate_name;
+    string description;
+    string transportation;
+    float latitude;
+    float longitude;
+    string external_identifier;
+    string external_identifier_type;
+  };
+  const string LOCATION_ENDPOINT = "/hsds3/location";
+  const string LOCATION_JSON_FILE = "location.json";
+
+  // From RFC6350.
+  const string PhoneType_text = "text";
+  const string PhoneType_voice = "voice";
+  const string PhoneType_fax = "fax";
+  const string PhoneType_cell = "cell";
+  const string PhoneType_video = "video";
+  const string PhoneType_pager = "pager";
+  const string PhoneType_textphone = "textphone";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Phone {
+    @key string dpmgid;
+    @key string id;
+    string location_id;
+    string service_id;
+    string organization_id;
+    string contact_id;
+    string service_at_location_id;
+    string number;
+    long extension;
+    string type;
+    string description;
+  };
+  const string PHONE_ENDPOINT = "/hsds3/phone";
+  const string PHONE_JSON_FILE = "phone.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Contact {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string service_id;
+    string service_at_location_id;
+    string location_id;
+    string name;
+    string title;
+    string department;
+    string email;
+  };
+  const string CONTACT_ENDPOINT = "/hsds3/contact";
+  const string CONTACT_JSON_FILE = "contact.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Address {
+    @key string dpmgid;
+    @key string id;
+    string location_id;
+    string attention;
+    string address_1;
+    string address_2;
+    string city;
+    string region;
+    string state_province;
+    string postal_code;
+    string country;
+    string address_type;
+  };
+  const string ADDRESS_ENDPOINT = "/hsds3/address";
+  const string ADDRESS_JSON_FILE = "address.json";
+
+  const string ScheduleFreq_weekly = "WEEKLY";
+  const string ScheduleFreq_monthly = "MONTHLY";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Schedule {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string location_id;
+    string service_at_location_id;
+    string valid_from; // Date?
+    string valid_to; // Date?
+    string dtstart; // Date?
+    float timezone;
+    string until; // Date?
+    long count; // spec says date.
+    string wkst; // spec says date.
+    string freq;
+    long interval;
+    string byday;
+    string byweekno;
+    long bymonthday;
+    long byyearday;
+    string description;
+    string opens_at; // Time?
+    string closes_at; // Time?
+    string schedule_link;
+    string attending_type;
+    string notes;
+  };
+  const string SCHEDULE_ENDPOINT = "/hsds3/schedule";
+  const string SCHEDULE_JSON_FILE = "schedule.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Funding {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string service_id;
+    string source;
+  };
+  const string FUNDING_ENDPOINT = "/hsds3/funding";
+  const string FUNDING_JSON_FILE = "funding.json";
+
+  const string ServiceAreaExtentType_geojson = "geojson";
+  const string ServiceAreaExtentType_topojson = "topojson";
+  const string ServiceAreaExtentType_kml = "kml";
+  const string ServiceAreaExtentType_text = "text";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct ServiceArea {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string name;
+    string description;
+    string extent;
+    string extent_type;
+    string uri;
+  };
+  const string SERVICE_AREA_ENDPOINT = "/hsds3/service_area";
+  const string SERVICE_AREA_JSON_FILE = "service_area.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct RequiredDocument {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string document;
+    string uri;
+  };
+  const string REQUIRED_DOCUMENT_ENDPOINT = "/hsds3/required_document";
+  const string REQUIRED_DOCUMENT_JSON_FILE = "required_document.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Language {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string location_id;
+    string phone_id;
+    string name;
+    string code;
+    string note;
+  };
+  const string LANGUAGE_ENDPOINT = "/hsds3/language";
+  const string LANGUAGE_JSON_FILE = "language.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Accessibility {
+    @key string dpmgid;
+    @key string id;
+    string location_id;
+    string description;
+    string details;
+    string url;
+  };
+  const string ACCESSIBILITY_ENDPOINT = "/hsds3/accessibility";
+  const string ACCESSIBILITY_JSON_FILE = "accessibility.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct CostOption {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string valid_from;
+    string valid_to;
+    string option;
+    string currency;
+    float amount;
+    string amount_description;
+  };
+  const string COST_OPTION_ENDPOINT = "/hsds3/cost_option";
+  const string COST_OPTION_JSON_FILE = "cost_option.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Taxonomy {
+    @key string dpmgid;
+    @key string id;
+    string name;
+    string description;
+    string uri;
+    string version;
+  };
+  const string TAXONOMY_ENDPOINT = "/hsds3/taxonomy";
+  const string TAXONOMY_JSON_FILE = "taxonomy.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct TaxonomyTerm {
+    @key string dpmgid;
+    @key string id;
+    string code;
+    string name;
+    string description;
+    string parent_id;
+    string taxonomy;
+    string language;
+    string taxonomy_id;
+    string term_uri;
+  };
+  const string TAXONOMY_TERM_ENDPOINT = "/hsds3/taxonomy_term";
+  const string TAXONOMY_TERM_JSON_FILE = "taxonomy_term.json";
+
+  const string MetadataResourceType_service = "service";
+  const string MetadataResourceType_phone = "phone";
+  const string MetadataResourceType_schedule = "schedule";
+  const string MetadataResourceType_service_area = "service_area";
+  const string MetadataResourceType_service_at_location = "service_at_location";
+  const string MetadataResourceType_location = "location";
+  const string MetadataResourceType_language = "language";
+  const string MetadataResourceType_organization = "organization";
+  const string MetadataResourceType_funding = "funding";
+  const string MetadataResourceType_accessibility = "accessibility";
+  const string MetadataResourceType_cost_option = "cost_option";
+  const string MetadataResourceType_program = "program";
+  const string MetadataResourceType_required_document = "required_document";
+  const string MetadataResourceType_contact = "contact";
+  const string MetadataResourceType_organization_identifier = "organization_identifier";
+  const string MetadataResourceType_attribute = "attribute";
+  const string MetadataResourceType_metadata = "metadata";
+  const string MetadataResourceType_meta_table_description = "meta_table_description";
+  const string MetadataResourceType_taxonomy = "taxonomy";
+  const string MetadataResourceType_taxonomy_term = "taxonomy_term";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Metadata {
+    @key string dpmgid;
+    @key string id;
+    string resource_id;
+    string resource_type;
+    string last_action_date; // datetime?
+    string last_action_type;
+    string field_name;
+    string previous_value;
+    string replacement_value;
+    string updated_by;
+  };
+  const string METADATA_ENDPOINT = "/hsds3/metadata";
+  const string METADATA_JSON_FILE = "metadata.json";
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct MetaTableDescription {
+    @key string dpmgid;
+    @key string id;
+    string name;
+    string language;
+    string character_set;
+  };
+  const string META_TABLE_DESCRIPTION_ENDPOINT = "/hsds3/meta_table_description";
+  const string META_TABLE_DESCRIPTION_JSON_FILE = "meta_table_description.json";
+
+};
