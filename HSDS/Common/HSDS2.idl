@@ -1,0 +1,489 @@
+// Copyright 2023 CommunityUtils Authors
+
+#include <tao/StringSeq.pidl>
+
+module HSDS2 {
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Organization {
+    @key string dpmgid;
+    @key string id;
+    string name;
+    string alternate_name;
+    string description;
+    string email;
+    string url;
+    string tax_status;
+    string tax_id;
+    long year_incorporated;
+    string legal_status;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Program {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string name;
+    string alternate_name;
+  };
+
+  enum ServiceStatus {
+    ServiceStatus_active,
+    ServiceStatus_inactive,
+    ServiceStatus_defunct,
+    ServiceStatus_temporarily_closed,
+    ServiceStatus_none
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Service {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string program_id;
+    string name;
+    string alternate_name;
+    string description;
+    string url;
+    string email;
+    ServiceStatus status;
+    string interpretation_services;
+    string application_process;
+    string wait_time;
+    string fees;
+    string accreditations;
+    string licenses;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct ServiceAttribute {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string taxonomy_term_id;
+  };
+
+  enum LinkType {
+    LinkType_organization,
+    LinkType_program,
+    LinkType_service,
+    LinkType_service_at_location,
+    LinkType_location,
+    LinkType_phone,
+    LinkType_contact,
+    LinkType_physical_address,
+    LinkType_postal_address,
+    LinkType_schedule,
+    LinkType_funding,
+    LinkType_eligibility,
+    LinkType_service_area,
+    LinkType_required_document,
+    LinkType_payment_accepted,
+    LinkType_language,
+    LinkType_accessibility_for_disabilities
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct OtherAttribute {
+    @key string dpmgid;
+    @key string id;
+    string link_id;
+    LinkType link_type;
+    string taxonomy_term_id;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct ServiceAtLocation {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string location_id;
+    string description;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Location {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string name;
+    string alternate_name;
+    string description;
+    string transportation;
+    float latitude;
+    float longitude;
+  };
+
+  enum PhoneType {
+    PhoneType_text,
+    PhoneType_voice,
+    PhoneType_fax,
+    PhoneType_cell,
+    PhoneType_video,
+    PhoneType_pager,
+    PhoneType_textphone
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Phone {
+    @key string dpmgid;
+    @key string id;
+    string location_id;
+    string service_id;
+    string organization_id;
+    string contact_id;
+    string service_at_location_id;
+    string number;
+    long extension;
+    PhoneType type;
+    string language;
+    string description;
+    string department;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Contact {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string service_id;
+    string service_at_location_id;
+    string name;
+    string title;
+    string department;
+    string email;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct PhysicalAddress {
+    @key string dpmgid;
+    @key string id;
+    string location_id;
+    string attention;
+    string address_1;
+    string address_2;
+    string address_3;
+    string address_4;
+    string city;
+    string region;
+    string state_province;
+    string postal_code;
+    string country;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct PostalAddress {
+    @key string dpmgid;
+    @key string id;
+    string location_id;
+    string attention;
+    string address_1;
+    string address_2;
+    string address_3;
+    string address_4;
+    string city;
+    string region;
+    string state_province;
+    string postal_code;
+    string country;
+  };
+
+  enum ScheduleFreq {
+    ScheduleFreq_DAILY,
+    ScheduleFreq_WEEKLY,
+    ScheduleFreq_MONTHLY,
+    ScheduleFreq_YEARLY
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Schedule {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string location_id;
+    string service_at_location_id;
+    string valid_from; // Date?
+    string valid_to; // Date?
+    string dtstart; // Date?
+    float timezone;
+    string until; // Date?
+    long count; // spec says date.
+    string wkst; // spec says date.
+    ScheduleFreq freq;
+    long interval;
+    string byday;
+    string byweekno;
+    long bymonthday;
+    long byyearday;
+    string description;
+    string opens_at; // Time?
+    string closes_at; // Time?
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Funding {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string service_id;
+    string source;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Eligibility {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    // No other fields?
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct ServiceArea {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string service_area;
+    string description;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct RequiredDocument {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string document;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct PaymentAccepted {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string payment;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Language {
+    @key string dpmgid;
+    @key string id;
+    string service_id;
+    string location_id;
+    string lanuage;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct AccessibilityForDisabilities {
+    @key string dpmgid;
+    @key string id;
+    string location_id;
+    string accessibility;
+    string details;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct TaxonomyTerm {
+    @key string dpmgid;
+    @key string id;
+    string term;
+    string description;
+    string parent_id;
+    string taxonomy;
+    string language;
+  };
+
+  enum ResourceType {
+    ResourceType_organization,
+    ResourceType_program,
+    ResourceType_service,
+    ResourceType_service_attribute,
+    ResourceType_other_attribute,
+    ResourceType_service_at_location,
+    ResourceType_location,
+    ResourceType_phone,
+    ResourceType_contact,
+    ResourceType_schedule,
+    ResourceType_funding,
+    ResourceType_eligibility,
+    ResourceType_service_area,
+    ResourceType_accessibility_for_disabilities,
+    ResourceType_taxonomy_term
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct Metadata {
+    @key string dpmgid;
+    @key string id;
+    string resource_id;
+    ResourceType resource_type;
+    string last_action_date; // datetime?
+    string last_action_type;
+    string field_name;
+    string previous_value;
+    string replacement_value;
+    string updated_by;
+  };
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct MetaTableDescription {
+    @key string dpmgid;
+    @key string id;
+    string name;
+    string language;
+    string character_set;
+  };
+
+  typedef sequence<Contact> ContactSequence;
+  typedef sequence<Funding> FundingSequence;
+  typedef sequence<Location> LocationSequence; // Location is a @topic so LocationSeq is already used
+  typedef sequence<Program> ProgramSequence;
+  typedef sequence<Service> ServiceSequence; // Service is a @topic so ServiceSeq is already used
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct CompleteOrganization {
+    @key string dpmgid;
+    @key string id;
+    string name;
+    string alternate_name;
+    string description;
+    string email;
+    string url;
+    string tax_status;
+    string tax_id;
+    long year_incorporated;
+    string legal_status;
+    ContactSequence contacts;
+    FundingSequence funding;
+    LocationSequence locations;
+    ProgramSequence programs;
+    ServiceSequence services;
+  };
+
+  typedef sequence<Eligibility> EligibilitySequence;
+  typedef sequence<Schedule> ScheduleSequence;
+  typedef sequence<Language> LanguageSequence;
+  typedef sequence<PaymentAccepted> PaymentAcceptedSequence;
+  typedef sequence<Phone> PhoneSequence;
+  typedef sequence<RequiredDocument> RequiredDocumentSequence;
+  typedef sequence<ServiceArea> ServiceAreaSequence;
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct CompleteService {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string program_id;
+    string name;
+    string alternate_name;
+    string description;
+    string url;
+    string email;
+    ServiceStatus status;
+    string interpretation_services;
+    string application_process;
+    string wait_time;
+    string fees;
+    string accreditations;
+    string licenses;
+    ContactSequence contacts;
+    EligibilitySequence eligibility;
+    FundingSequence funding;
+    ScheduleSequence regular_schedule;
+    ScheduleSequence holiday_schedule;
+    LanguageSequence language;
+    PaymentAcceptedSequence payment_accepted;
+    PhoneSequence phones;
+    RequiredDocumentSequence required_documents;
+    ServiceAreaSequence service_area;
+  };
+
+  typedef sequence<PostalAddress> PostalAddressSequence;
+  typedef sequence<PhysicalAddress> PhysicalAddressSequence; // PhysicalAddress is a @topic so PhysicalAddressSeq is already used
+  typedef sequence<AccessibilityForDisabilities> AccessibilityForDisabilitiesSequence;
+
+  @topic
+  @mutable
+  @autoid(HASH)
+  struct CompleteLocation {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string name;
+    string alternate_name;
+    string description;
+    string transportation;
+    float latitude;
+    float longitude;
+    ScheduleSequence regular_schedule;
+    ScheduleSequence holiday_schedule;
+    LanguageSequence languages;
+    PostalAddressSequence postal_address;
+    PhysicalAddressSequence physical_address;
+    PhoneSequence phones;
+    AccessibilityForDisabilitiesSequence accessibility_for_disabilities;
+  };
+
+  @mutable
+  @autoid(HASH)
+  struct CompleteContact {
+    @key string dpmgid;
+    @key string id;
+    string organization_id;
+    string service_id;
+    string service_at_location_id;
+    string name;
+    string title;
+    string department;
+    string email;
+    PhoneSequence phones;
+  };
+
+};

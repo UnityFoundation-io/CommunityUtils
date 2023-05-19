@@ -21,8 +21,9 @@ The IDL for the samples must be compiled with complete type object support.
 
 1. Build OpenDDS with security enabled.
 2. Create a `setenv.sh` file that sources the OpenDDS setenv.sh.
-3. `source setenv.sh`
-4. `mwc.pl -type gnuace`
-5. `make`
+3. To `setenv.sh`, add a variable `COMMUNITY_UTILS_ROOT` that is set to the root directory of this project.
+4. `source setenv.sh`
+5. `mwc.pl -type gnuace`
+6. `make`
 
 Copyright 2023 CommunityUtils Authors

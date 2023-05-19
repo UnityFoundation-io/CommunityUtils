@@ -1,4 +1,4 @@
 // Copyright 2023 CommunityUtils Authors
-project: opendds_security, CommunitySecurityPluginJavaBuild {
+project: opendds_security, CommunitySecurityPluginJavaBuild, install {
   dynamicflags += COMMUNITYSECURITYPLUGIN_BUILD_DLL
 }

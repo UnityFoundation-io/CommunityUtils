@@ -1,0 +1,8 @@
+// Copyright 2023 CommunityUtils Authors
+
+project: dcps_rtps_udp, CommunitySecurityPlugin {
+  includes += $(COMMUNITY_UTILS_ROOT)/HSDS/Common
+  libpaths += $(COMMUNITY_UTILS_ROOT)/HSDS/Common
+  libs += HSDSCommon
+  after += HSDSCommon
+}

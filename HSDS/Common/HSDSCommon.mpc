@@ -1,0 +1,12 @@
+// Copyright 2023 CommunityUtils Authors
+
+project: opendds_cxx11, dcps_rtps_udp, CommunitySecurityPlugin, install {
+  lit_libs += curl
+  lit_libs += curlcpp
+  idlflags += -Wb,export_include=HSDS_Common_export.h -Wb,export_macro=HSDS_Common_Export -SS
+  dcps_ts_flags += -Gxtypes-complete -Wb,export_include=HSDS_Common_export.h -Wb,export_macro=HSDS_Common_Export
+
+  TypeSupport_Files {
+    HSDS3.idl
+  }
+}

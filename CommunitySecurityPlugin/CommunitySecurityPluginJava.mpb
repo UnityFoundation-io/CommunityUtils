@@ -1,5 +1,5 @@
 // Copyright 2023 CommunityUtils Authors
 project: java {
   after += CommunitySecurityPlugin
-  javacflags += -classpath $(COMMUNITY_SECURITY_PLUGIN_ROOT)/CommunitySecurityPlugin.jar
+  javacflags += -classpath $(COMMUNITY_UTILS_ROOT)/CommunitySecurityPlugin/CommunitySecurityPlugin.jar
 }

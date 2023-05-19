@@ -1,7 +1,7 @@
 // Copyright 2023 CommunityUtils Authors
 project: opendds_security  {
-  includes += $(COMMUNITY_SECURITY_PLUGIN_ROOT)
-  libpaths += $(COMMUNITY_SECURITY_PLUGIN_ROOT)
+  includes += $(COMMUNITY_UTILS_ROOT)/CommunitySecurityPlugin
+  libpaths += $(COMMUNITY_UTILS_ROOT)/CommunitySecurityPlugin
   libs += CommunitySecurityPlugin
   after += CommunitySecurityPlugin
 }

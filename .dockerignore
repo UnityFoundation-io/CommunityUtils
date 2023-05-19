@@ -1,0 +1,7 @@
+# Copyright 2023 CommunityUtils Authors
+DdsSecurityDemo
+Time
+.git
+.dockerignore
+**.gitignore
+Dockerfile

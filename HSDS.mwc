@@ -1,0 +1,13 @@
+// Copyright 2023 CommunityUtils Authors
+
+workspace {
+
+  CommunitySecurityPlugin
+  HSDS
+
+  exclude {
+    DdsSecurityDemo
+    Time
+  }
+
+}

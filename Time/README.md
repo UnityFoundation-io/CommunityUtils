@@ -8,11 +8,10 @@ The TimeReader program reads and prints the samples.
 
 1. Build the CommunitySecurityPlugin.
 2. Create a `setenv.sh` that sources the `setenv.sh` from the CommunitySecurityPlugin.
-3. Add and export a variable `COMMUNITY_SECURITY_PLUGIN_ROOT` that is the path to the CommunitySecurityPlugin.
-4. Add and export a variable `DPM_URL` that is the url of the DDS Permissions Manager.
-5. `source setenv.sh`
-6. `mwc.pl -type gnuace -include "${COMMUNITY_SECURITY_PLUGIN_ROOT}"`
-7. `make`
+3. Add and export a variable `DPM_URL` that is the url of the DDS Permissions Manager.
+4. `source setenv.sh`
+5. `mwc.pl -type gnuace -include "${COMMUNITY_UTILS_ROOT}/CommunitySecurityPlugin"`
+6. `make`
 
 ## Set up
 
