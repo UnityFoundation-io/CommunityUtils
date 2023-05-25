@@ -137,7 +137,8 @@ public:
   }
 
   const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
-    typename UnitResourceBase<T>::ContainerType new_map;
+    typedef typename UnitResourceBase<T>::ContainerType ContainerType;
+    ContainerType new_container;
 
     // Parse the input.
     rapidjson::StringStream ss(request.get_content().c_str());
@@ -159,7 +160,7 @@ public:
         return this->respond(err);
       }
       // Save.
-      new_map.insert(element);
+      new_container.insert(element);
       if (!jvr.end_element()) {
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
@@ -168,32 +169,77 @@ public:
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
 
-    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
-                     this->respond(ErrorResponse::make_internal_server_error()));
-    // Unregister.
     if (this->application_.create_writers()) {
-      for (const auto& e : this->unit_.container) {
-        const DDS::ReturnCode_t retcode = this->unit_.writer->unregister_instance(e, DDS::HANDLE_NIL);
+      ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                       this->respond(ErrorResponse::make_internal_server_error()));
+
+      typename ContainerType::const_ordered_iterator pos_new = new_container.ordered_begin();
+      const typename ContainerType::const_ordered_iterator limit_new = new_container.ordered_end();
+      typename ContainerType::const_ordered_iterator pos_old = this->unit_.container.ordered_begin();
+      const typename ContainerType::const_ordered_iterator limit_old= this->unit_.container.ordered_end();
+
+      while (pos_new != limit_new || pos_old != limit_old) {
+        if (pos_new == limit_new) {
+          // Deleted item.
+          const DDS::ReturnCode_t retcode = this->unit_.writer->unregister_instance(this->unit_.container.at(pos_old->second), DDS::HANDLE_NIL);
+          if (retcode != DDS::RETCODE_OK) {
+            ACE_ERROR((LM_ERROR, "ERROR: unregister_instance failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+            return this->respond(ErrorResponse::make_internal_server_error());
+          }
+          ++pos_old;
+          continue;
+        }
+        if (pos_old == limit_old) {
+          // New item.
+          const DDS::ReturnCode_t retcode = this->unit_.writer->write(new_container.at(pos_new->second), DDS::HANDLE_NIL);
+          if (retcode != DDS::RETCODE_OK) {
+            ACE_ERROR((LM_ERROR, "ERROR: write failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+            return this->respond(ErrorResponse::make_internal_server_error());
+          }
+          ++pos_new;
+          continue;
+        }
+
+        if (pos_new->first == pos_old->first) {
+          const T& n = new_container.at(pos_new->second);
+          const T& o = this->unit_.container.at(pos_old->second);
+
+          if (n != o) {
+            // Changed item.
+            const DDS::ReturnCode_t retcode = this->unit_.writer->write(n, DDS::HANDLE_NIL);
+            if (retcode != DDS::RETCODE_OK) {
+              ACE_ERROR((LM_ERROR, "ERROR: write failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+              return this->respond(ErrorResponse::make_internal_server_error());
+            }
+          }
+          ++pos_new;
+          ++pos_old;
+          continue;
+        }
+
+        if (pos_new->first < pos_old->first) {
+          // New item.
+          const DDS::ReturnCode_t retcode = this->unit_.writer->write(new_container.at(pos_new->second), DDS::HANDLE_NIL);
+          if (retcode != DDS::RETCODE_OK) {
+            ACE_ERROR((LM_ERROR, "ERROR: write failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+            return this->respond(ErrorResponse::make_internal_server_error());
+          }
+          ++pos_new;
+          continue;
+        }
+
+        // Deleted item.
+        const DDS::ReturnCode_t retcode = this->unit_.writer->unregister_instance(this->unit_.container.at(pos_old->second), DDS::HANDLE_NIL);
         if (retcode != DDS::RETCODE_OK) {
           ACE_ERROR((LM_ERROR, "ERROR: unregister_instance failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
           return this->respond(ErrorResponse::make_internal_server_error());
         }
+        ++pos_old;
       }
     }
 
     // Persist.
-    this->unit_.container.swap(new_map);
-
-    // Write.
-    if (this->application_.create_writers()) {
-      for (const auto& e : this->unit_.container) {
-        const DDS::ReturnCode_t retcode = this->unit_.writer->write(e, DDS::HANDLE_NIL);
-        if (retcode != DDS::RETCODE_OK) {
-          ACE_ERROR((LM_ERROR, "ERROR: write failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
-          return this->respond(ErrorResponse::make_internal_server_error());
-        }
-      }
-    }
+    this->unit_.container.swap(new_container);
 
     this->application_.increment_transaction();
 
