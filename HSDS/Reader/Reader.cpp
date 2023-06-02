@@ -1,5 +1,6 @@
 // Copyright 2023 CommunityUtils Authors
 
+#include "HsdsResource.h"
 #include "Common.h"
 
 #include <dds/DCPS/DCPS_Utils.h>
@@ -247,6 +248,35 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     return EXIT_FAILURE;
   }
 
+  // Provide endpoints to get data out of the reader.
+  webserver ws = create_webserver(application.http_port());
+
+  HsdsResource<HSDS3::Service> service_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Phone> phone_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Schedule> schedule_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::ServiceArea> service_area_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::ServiceAtLocation> service_at_location_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Location> location_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Language> language_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Organization> organization_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Funding> funding_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Accessibility> accessibility_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::CostOption> cost_option_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Program> program_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::RequiredDocument> required_document_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Contact> contact_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::OrganizationIdentifier> organization_identifier_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Attribute> attribute_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Metadata> metadata_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::MetaTableDescription> meta_table_description_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Taxonomy> taxonomy_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Address> address_hsds_resource(application, ws, false);
+
+  // TODO(sonndinh): does starting the server non-blocking work?
+  ws.start(false);
+
+  // Set up listeners for DDS samples.
   ACE_Thread_Mutex mutex;
 
   DDS::DataReaderListener_var service_listener(new Listener<HSDS3::Service> (application, mutex));
@@ -272,14 +302,14 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   DDS::DataReaderListener_var address_listener(new Listener<HSDS3::Address> (application, mutex));
 
   GuardWrapper wrapper;
-  DDS::WaitSet_var ws = new DDS::WaitSet;
-  ws->attach_condition(wrapper.guard());
+  DDS::WaitSet_var waitset = new DDS::WaitSet;
+  waitset->attach_condition(wrapper.guard());
   DDS::ConditionSeq active;
   const DDS::Duration_t period = application.server_poll_period();
 
   bool keep_going = true;
   while (keep_going) {
-    DDS::ReturnCode_t error = ws->wait(active, period);
+    DDS::ReturnCode_t error = waitset->wait(active, period);
     if (error == DDS::RETCODE_TIMEOUT) {
       ACE_GUARD_RETURN(ACE_Thread_Mutex, g, mutex, EXIT_FAILURE);
 
@@ -311,7 +341,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     }
   }
 
-  ws->detach_condition(wrapper.guard());
+  waitset->detach_condition(wrapper.guard());
 
   application.shutdown();
 

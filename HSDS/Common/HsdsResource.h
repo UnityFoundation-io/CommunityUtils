@@ -12,13 +12,14 @@ template <class T>
 class HsdsElementResource : public UnitResourceBase<T> {
 public:
   HsdsElementResource(Application& application,
-                      webserver& ws)
+                      webserver& ws,
+                      bool for_writer)
     : UnitResourceBase<T>(application)
   {
     this->disallow_all();
-    this->set_allowing("PUT", true);
+    this->set_allowing("PUT", for_writer);
     this->set_allowing("GET", true);
-    this->set_allowing("DELETE", true);
+    this->set_allowing("DELETE", for_writer);
 
     ws.register_resource(application.unit<T>().endpoint + "/{dpmgid}/{id}", this);
   }
@@ -116,14 +117,14 @@ public:
 template <class T>
 class HsdsCollectionResource : public UnitResourceBase<T> {
 public:
-  HsdsCollectionResource(Application& application, webserver& ws)
+  HsdsCollectionResource(Application& application, webserver& ws, bool for_writer)
     : UnitResourceBase<T>(application)
   {
     this->disallow_all();
-    this->set_allowing("PUT", true);
-    this->set_allowing("POST", true);
+    this->set_allowing("PUT", for_writer);
+    this->set_allowing("POST", for_writer);
     this->set_allowing("GET", true);
-    this->set_allowing("DELETE", true);
+    this->set_allowing("DELETE", for_writer);
 
     ws.register_resource(application.unit<T>().endpoint, this);
   }
@@ -301,9 +302,10 @@ template <typename T>
 class HsdsResource {
 public:
   HsdsResource(Application& application,
-               webserver& ws)
-    : element_resource_(application, ws)
-    , collection_resource_(application, ws)
+               webserver& ws,
+               bool for_writer = true)
+    : element_resource_(application, ws, for_writer)
+    , collection_resource_(application, ws, for_writer)
   {}
 
 private:
