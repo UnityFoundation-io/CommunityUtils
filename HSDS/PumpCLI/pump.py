@@ -11,20 +11,20 @@ dpm_gid = os.getenv('DPM_GID')
 @click.option('-o', '--organizations', type=click.Path(exists=True), help="File containing HSDS Organizations.")
 @click.option('-l', '--locations', type=click.Path(exists=True), help="File containing HSDS Locations.")
 @click.option('-s', '--services', type=click.Path(exists=True), help="File containing HSDS Services.")
-@click.option('--process-iterably', is_flag=True, default=False, help="Process records iterably.")
+@click.option('--process-iteratively', is_flag=True, default=False, help="Process records iteratively.")
 @click.option('--url', required=True, help="The base url where the service is hosted.")
-def pump_data(organizations, locations, services, url, process_iterably):
+def pump_data(organizations, locations, services, url, process_iteratively):
     """This Python script sends an HTTP PUT request where the payload is a collection of HSDS3-based entities."""
 
     if organizations:
-        process_file('organization', organizations, url, process_iterably)
+        process_file('organization', organizations, url, process_iteratively)
     if locations:
-        process_file('location', locations, url, process_iterably)
+        process_file('location', locations, url, process_iteratively)
     if services:
-        process_file('service', services, url, process_iterably)
+        process_file('service', services, url, process_iteratively)
 
 
-def process_file(choice, file, url, process_iterably):
+def process_file(choice, file, url, process_iteratively):
     if file.endswith('.csv'):
         df = pd.read_csv(file)
     elif file.endswith('.xlsx') or file.endswith('.xls'):
@@ -36,7 +36,7 @@ def process_file(choice, file, url, process_iterably):
     df.description = df.description.fillna(' ')  # TODO: Enforce empty description validation?
     df = df.dropna(axis=1, how='all')  # remove null columns (key, value)
 
-    send_to_provider_directory(url, choice, process_iterably, remove_items_if_value_is_null(df))
+    send_to_provider_directory(url, choice, process_iteratively, remove_items_if_value_is_null(df))
 
 def remove_items_if_value_is_null(df):
     json_dict = df.to_dict(orient='records')
@@ -51,10 +51,10 @@ def remove_items_if_value_is_null(df):
     return json_dict
 
 
-def send_to_provider_directory(url, choice, process_iterably, data):
+def send_to_provider_directory(url, choice, process_iteratively, data):
     provider_url = url + "/hsds3/" + choice
 
-    if process_iterably:
+    if process_iteratively:
         for obj in data:
             entity_url = provider_url + "/" + dpm_gid + "/" + obj['id']
 
