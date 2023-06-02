@@ -39,6 +39,8 @@ public:
       list_[pos->second] = value;
     }
 
+    // TODO(sonndinh): Should these 2 lines be put into an else block
+    // (when pos == map_.end())?
     map_[key] = list_.size();
     list_.push_back(value);
   }
