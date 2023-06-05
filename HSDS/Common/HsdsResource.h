@@ -13,13 +13,13 @@ class HsdsElementResource : public UnitResourceBase<T> {
 public:
   HsdsElementResource(Application& application,
                       webserver& ws,
-                      bool for_writer)
+                      bool allow_modifying)
     : UnitResourceBase<T>(application)
   {
     this->disallow_all();
-    this->set_allowing("PUT", for_writer);
+    this->set_allowing("PUT", allow_modifying);
     this->set_allowing("GET", true);
-    this->set_allowing("DELETE", for_writer);
+    this->set_allowing("DELETE", allow_modifying);
 
     ws.register_resource(application.unit<T>().endpoint + "/{dpmgid}/{id}", this);
   }
@@ -57,6 +57,8 @@ public:
       return this->respond(ErrorResponse::make_bad_request("id from URL and body disagree"));
     }
 
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                     this->respond(ErrorResponse::make_internal_server_error()));
     if (this->application_.insert_and_write(element) != DDS::RETCODE_OK) {
       return this->respond(ErrorResponse::make_internal_server_error());
     }
@@ -78,6 +80,8 @@ public:
       return this->respond(ErrorResponse::make_bad_request("id is required"));
     }
 
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                     this->respond(ErrorResponse::make_internal_server_error()));
     typename UnitResourceBase<T>::ContainerType::const_iterator pos = this->unit_.container.find(std::make_pair(dpmgid, id));
     if (pos == this->unit_.container.end()) {
       return this->respond(ErrorResponse::make_not_found());
@@ -100,6 +104,9 @@ public:
     }
 
     const typename UnitResourceBase<T>::ContainerType::KeyType key = std::make_pair(dpmgid, id);
+
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                     this->respond(ErrorResponse::make_internal_server_error()));
     typename UnitResourceBase<T>::ContainerType::const_iterator pos = this->unit_.container.find(key);
     if (pos == this->unit_.container.end()) {
       return this->respond(ErrorResponse::make_not_found());
@@ -117,14 +124,14 @@ public:
 template <class T>
 class HsdsCollectionResource : public UnitResourceBase<T> {
 public:
-  HsdsCollectionResource(Application& application, webserver& ws, bool for_writer)
+  HsdsCollectionResource(Application& application, webserver& ws, bool allow_modifying)
     : UnitResourceBase<T>(application)
   {
     this->disallow_all();
-    this->set_allowing("PUT", for_writer);
-    this->set_allowing("POST", for_writer);
+    this->set_allowing("PUT", allow_modifying);
+    this->set_allowing("POST", allow_modifying);
     this->set_allowing("GET", true);
-    this->set_allowing("DELETE", for_writer);
+    this->set_allowing("DELETE", allow_modifying);
 
     ws.register_resource(application.unit<T>().endpoint, this);
   }
@@ -161,6 +168,8 @@ public:
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
 
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                     this->respond(ErrorResponse::make_internal_server_error()));
     // Unregister.
     if (this->application_.create_writers()) {
       for (const auto& e : this->unit_.container) {
@@ -222,6 +231,8 @@ public:
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
 
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                     this->respond(ErrorResponse::make_internal_server_error()));
     for (const auto& e : list) {
       if (this->application_.insert_and_write(e) != DDS::RETCODE_OK) {
         return this->respond(ErrorResponse::make_internal_server_error());
@@ -252,6 +263,9 @@ public:
 
     size_t idx = 0;
     jvw.begin_sequence();
+
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                     this->respond(ErrorResponse::make_internal_server_error()));
     if (offset < this->unit_.container.size()) {
       typename UnitResourceBase<T>::ContainerType::const_iterator pos = this->unit_.container.begin();
       std::advance(pos, offset);
@@ -272,6 +286,8 @@ public:
   }
 
   const std::shared_ptr<http_response> render_DELETE(const http_request&) {
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
+                     this->respond(ErrorResponse::make_internal_server_error()));
     // Unregister.
     if (this->application_.create_writers()) {
       for (const auto& e : this->unit_.container) {
@@ -303,9 +319,9 @@ class HsdsResource {
 public:
   HsdsResource(Application& application,
                webserver& ws,
-               bool for_writer = true)
-    : element_resource_(application, ws, for_writer)
-    , collection_resource_(application, ws, for_writer)
+               bool allow_modifying = true)
+    : element_resource_(application, ws, allow_modifying)
+    , collection_resource_(application, ws, allow_modifying)
   {}
 
 private:

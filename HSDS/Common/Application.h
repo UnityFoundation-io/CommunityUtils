@@ -23,14 +23,16 @@ struct Unit {
 
   typedef Container<T> ContainerType;
   ContainerType container;
+
   const std::string topic_name_key;
   std::string topic_name;
-  typename OpenDDS::DCPS::DDSTraits<T>::TypeSupportType::_var_type type_support;
   DDS::Topic_var topic;
-  typename OpenDDS::DCPS::DDSTraits<T>::DataWriterType::_var_type writer;
-  typename OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_var_type reader;
   const std::string endpoint;
   const std::string json_file;
+
+  typename OpenDDS::DCPS::DDSTraits<T>::TypeSupportType::_var_type type_support;
+  typename OpenDDS::DCPS::DDSTraits<T>::DataWriterType::_var_type writer;
+  typename OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_var_type reader;
 };
 
 class HSDS_Common_Export Application {
@@ -421,6 +423,8 @@ public:
 
   const std::string& data_path() const { return data_path_; }
 
+  ACE_Thread_Mutex& get_mutex() { return mutex_; }
+
  private:
   std::string dpm_url_;
   std::string dpm_gid_;
@@ -450,6 +454,11 @@ public:
   OpenDDS::DCPS::TransportConfig_rch transport_config_;
   DDS::DomainParticipantFactory_var domain_participant_factory_;
   DDS::DomainParticipant_var participant_;
+
+  // Protect the transaction_ and these Unit objects.
+  // A more fine-grained locking approach such as one for the container
+  // inside each Unit object may be considered for an improvement.
+  ACE_Thread_Mutex mutex_;
 
   uint64_t transaction_;
 
