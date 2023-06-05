@@ -8,9 +8,9 @@
 #include <dds/DCPS/Observer.h>
 #include <dds/DCPS/DataReaderImpl.h>
 
-#include "curlcpp/curl_easy.h"
-#include "curlcpp/curl_exception.h"
-#include "curlcpp/curl_header.h"
+#include <curlcpp/curl_easy.h>
+#include <curlcpp/curl_exception.h>
+#include <curlcpp/curl_header.h>
 
 #include <curl/curl.h>
 
