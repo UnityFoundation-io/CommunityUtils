@@ -12,7 +12,7 @@ template <class T>
 class HsdsElementResource : public UnitResourceBase<T> {
 public:
   HsdsElementResource(Application& application,
-                      webserver& ws,
+                      httpserver::webserver& ws,
                       bool allow_modifying)
     : UnitResourceBase<T>(application)
   {
@@ -24,7 +24,7 @@ public:
     ws.register_resource(application.unit<T>().endpoint + "/{dpmgid}/{id}", this);
   }
 
-  const std::shared_ptr<http_response> render_PUT(const http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -67,7 +67,7 @@ public:
     return this->respond_with_json(OpenDDS::DCPS::to_json(element));
   }
 
-  const std::shared_ptr<http_response> render_GET(const http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -90,7 +90,7 @@ public:
     return this->respond_with_json(OpenDDS::DCPS::to_json(*pos));
   }
 
-  const std::shared_ptr<http_response> render_DELETE(const http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request& request) {
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -124,7 +124,7 @@ public:
 template <class T>
 class HsdsCollectionResource : public UnitResourceBase<T> {
 public:
-  HsdsCollectionResource(Application& application, webserver& ws, bool allow_modifying)
+  HsdsCollectionResource(Application& application, httpserver::webserver& ws, bool allow_modifying)
     : UnitResourceBase<T>(application)
   {
     this->disallow_all();
@@ -136,7 +136,7 @@ public:
     ws.register_resource(application.unit<T>().endpoint, this);
   }
 
-  const std::shared_ptr<http_response> render_PUT(const http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
     typename UnitResourceBase<T>::ContainerType new_map;
 
     // Parse the input.
@@ -200,7 +200,7 @@ public:
     return this->respond_with_no_content();
   }
 
-  const std::shared_ptr<http_response> render_POST(const http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_POST(const httpserver::http_request& request) {
     std::vector<T> list;
 
     // Parse the input.
@@ -244,7 +244,7 @@ public:
     return this->respond_with_no_content();
   }
 
-  const std::shared_ptr<http_response> render_GET(const http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
     size_t offset = 0;
     size_t count = this->unit_.container.size();
 
@@ -279,13 +279,13 @@ public:
     jvw.end_sequence();
     writer.Flush();
 
-    std::shared_ptr<http_response> response = this->respond_with_json(buffer.GetString());
+    std::shared_ptr<httpserver::http_response> response = this->respond_with_json(buffer.GetString());
     response->with_header("Offset", OpenDDS::DCPS::to_dds_string(offset));
     response->with_header("Count", OpenDDS::DCPS::to_dds_string(idx));
     return response;
   }
 
-  const std::shared_ptr<http_response> render_DELETE(const http_request&) {
+  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request&) {
     ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
                      this->respond(ErrorResponse::make_internal_server_error()));
     // Unregister.
@@ -308,7 +308,7 @@ public:
   }
 
 private:
-  void add_headers(std::shared_ptr<http_response> response) const
+  void add_headers(std::shared_ptr<httpserver::http_response> response) const
   {
     response->with_header("Total", OpenDDS::DCPS::to_dds_string(this->unit_.container.size()));
   }
@@ -318,7 +318,7 @@ template <typename T>
 class HsdsResource {
 public:
   HsdsResource(Application& application,
-               webserver& ws,
+               httpserver::webserver& ws,
                bool allow_modifying = true)
     : element_resource_(application, ws, allow_modifying)
     , collection_resource_(application, ws, allow_modifying)

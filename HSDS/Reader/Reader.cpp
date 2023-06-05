@@ -246,7 +246,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   }
 
   // Provide endpoints to get data out of the reader.
-  webserver ws = create_webserver(application.http_port());
+  httpserver::webserver ws = httpserver::create_webserver(application.http_port());
 
   HsdsResource<HSDS3::Service> service_hsds_resource(application, ws, false);
   HsdsResource<HSDS3::Phone> phone_hsds_resource(application, ws, false);
