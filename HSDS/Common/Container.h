@@ -37,10 +37,10 @@ public:
     MapType::const_iterator pos = map_.find(key);
     if (pos != map_.end()) {
       list_[pos->second] = value;
+    } else {
+      map_[key] = list_.size();
+      list_.push_back(value);
     }
-
-    map_[key] = list_.size();
-    list_.push_back(value);
   }
 
   void erase(const T& value)

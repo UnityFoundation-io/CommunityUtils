@@ -202,7 +202,16 @@ protected:
   bool check_input(ErrorResponse& err,
                    const HSDS3::Location& value) const
   {
-    return check_common(err, value);
+    if (!check_common(err, value)) {
+      return false;
+    }
+
+    if (value.organization_id().empty()) {
+      err = ErrorResponse::make_bad_request("location.organization_id is required");
+      return false;
+    }
+
+    return true;
   }
 
   bool check_input(ErrorResponse& err,
