@@ -9,10 +9,10 @@
 #include <dds/DCPS/security/framework/Properties.h>
 #include <dds/DCPS/transport/rtps_udp/RtpsUdpInst.h>
 
-#include "curlcpp/curl_cookie.h"
-#include "curlcpp/curl_easy.h"
-#include "curlcpp/curl_exception.h"
-#include "curlcpp/curl_header.h"
+#include <curlcpp/curl_cookie.h>
+#include <curlcpp/curl_easy.h>
+#include <curlcpp/curl_exception.h>
+#include <curlcpp/curl_header.h>
 
 using curl::curl_cookie;
 using curl::curlcpp_cookies;
@@ -548,10 +548,11 @@ public:
   template <typename T>
   DDS::ReturnCode_t operator() (Unit<T>& unit)
   {
-    DDS::DataWriter_var writer; writer = publisher_->create_datawriter(unit.topic,
-                                                                       DATAWRITER_QOS_DEFAULT,
-                                                                       0,
-                                                                       OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+    DDS::DataWriter_var writer;
+    writer = publisher_->create_datawriter(unit.topic,
+                                           DATAWRITER_QOS_DEFAULT,
+                                           0,
+                                           OpenDDS::DCPS::DEFAULT_STATUS_MASK);
     if (!writer) {
       ACE_ERROR((LM_ERROR, "ERROR: create_datawriter failed!\n"));
       return DDS::RETCODE_ERROR;
@@ -603,10 +604,11 @@ public:
   template <typename T>
   DDS::ReturnCode_t operator() (Unit<T>& unit)
   {
-    DDS::DataReader_var reader; reader = subscriber_->create_datareader(unit.topic,
-                                                                        DATAREADER_QOS_DEFAULT,
-                                                                        0,
-                                                                        OpenDDS::DCPS::DEFAULT_STATUS_MASK);
+    DDS::DataReader_var reader;
+    reader = subscriber_->create_datareader(unit.topic,
+                                            DATAREADER_QOS_DEFAULT,
+                                            0,
+                                            OpenDDS::DCPS::DEFAULT_STATUS_MASK);
     if (!reader) {
       ACE_ERROR((LM_ERROR, "ERROR: create_datareader failed!\n"));
       return DDS::RETCODE_ERROR;

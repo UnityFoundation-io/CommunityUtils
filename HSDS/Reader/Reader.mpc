@@ -3,4 +3,5 @@
 project: dcpsexe, HSDSCommon, install {
     lit_libs += curl
     lit_libs += curlcpp
+    lit_libs += httpserver
 }

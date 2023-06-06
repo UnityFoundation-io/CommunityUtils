@@ -9,7 +9,6 @@
 
 #include <httpserver.hpp>
 
-using namespace httpserver;
 
 class ErrorResponse {
 public:
@@ -47,7 +46,7 @@ private:
   std::string message_;
 };
 
-class ResourceBase : public http_resource {
+class ResourceBase : public httpserver::http_resource {
 public:
   ResourceBase(Application& application)
     : application_(application)
@@ -55,7 +54,7 @@ public:
 
 protected:
 
-  virtual void add_headers(std::shared_ptr<http_response>) const {}
+  virtual void add_headers(std::shared_ptr<httpserver::http_response>) const {}
 
   // TODO: Could we have done this in IDL?
   bool check_input(ErrorResponse& err,
@@ -372,7 +371,7 @@ protected:
     return check_common(err, value);
   }
 
-  std::shared_ptr<http_response> respond(const ErrorResponse& response) const
+  std::shared_ptr<httpserver::http_response> respond(const ErrorResponse& response) const
   {
     rapidjson::StringBuffer buffer;
     rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
@@ -393,31 +392,28 @@ protected:
     jvw.end_sequence();
     writer.Flush();
 
-    std::shared_ptr<http_response> res =
-      std::shared_ptr<http_response>(new string_response(buffer.GetString(),
-                                                         response.status(),
-                                                         "application/json"));
+    std::shared_ptr<httpserver::http_response> res(new httpserver::string_response(buffer.GetString(),
+                                                                                   response.status(),
+                                                                                   "application/json"));
     add_transaction(res);
     add_headers(res);
     return res;
   }
 
-  std::shared_ptr<http_response> respond_with_json(const std::string& json) const
+  std::shared_ptr<httpserver::http_response> respond_with_json(const std::string& json) const
   {
-    std::shared_ptr<http_response> res =
-      std::shared_ptr<http_response>(new string_response(json,
-                                                         httpserver::http::http_utils::http_ok,
-                                                         "application/json"));
+    std::shared_ptr<httpserver::http_response> res(new httpserver::string_response(json,
+                                                                                   httpserver::http::http_utils::http_ok,
+                                                                                   "application/json"));
     add_transaction(res);
     add_headers(res);
     return res;
   }
 
-  std::shared_ptr<http_response> respond_with_no_content() const
+  std::shared_ptr<httpserver::http_response> respond_with_no_content() const
   {
-    std::shared_ptr<http_response> res =
-      std::shared_ptr<http_response>(new string_response("",
-                                                         httpserver::http::http_utils::http_no_content));
+    std::shared_ptr<httpserver::http_response> res(new httpserver::string_response("",
+                                                                                   httpserver::http::http_utils::http_no_content));
     add_transaction(res);
     add_headers(res);
     return res;
@@ -426,7 +422,7 @@ protected:
   Application& application_;
 
 private:
-  void add_transaction(std::shared_ptr<http_response> response) const
+  void add_transaction(std::shared_ptr<httpserver::http_response> response) const
   {
     std::stringstream ss;
     ss << application_.transaction();

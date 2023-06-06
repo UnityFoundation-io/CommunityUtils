@@ -508,7 +508,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   }
 
   // TODO: Request/response logging.
-  webserver ws = create_webserver(application.http_port());
+  httpserver::webserver ws = httpserver::create_webserver(application.http_port());
 
   // Create /hsds endpoints.
   HsdsResource<HSDS3::Service> service_hsds_resource(application, ws);

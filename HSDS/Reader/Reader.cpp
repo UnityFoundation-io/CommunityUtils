@@ -1,5 +1,6 @@
 // Copyright 2023 CommunityUtils Authors
 
+#include "HsdsResource.h"
 #include "Common.h"
 
 #include <dds/DCPS/DCPS_Utils.h>
@@ -7,9 +8,9 @@
 #include <dds/DCPS/Observer.h>
 #include <dds/DCPS/DataReaderImpl.h>
 
-#include "curlcpp/curl_easy.h"
-#include "curlcpp/curl_exception.h"
-#include "curlcpp/curl_header.h"
+#include <curlcpp/curl_easy.h>
+#include <curlcpp/curl_exception.h>
+#include <curlcpp/curl_header.h>
 
 #include <curl/curl.h>
 
@@ -100,11 +101,9 @@ class Listener : public DDS::DataReaderListener
 public:
   typedef Container<T> ContainerType;
 
-  Listener(Application& application,
-           ACE_Thread_Mutex& mutex)
+  Listener(Application& application)
     : application_(application)
     , reader_(application.unit<T>().reader)
-    , mutex_(mutex)
   {
     reader_->set_listener(this, DDS::DATA_AVAILABLE_STATUS);
     on_data_available(reader_);
@@ -128,7 +127,7 @@ public:
 
   void on_data_available(DDS::DataReader_ptr)
   {
-    ACE_GUARD(ACE_Thread_Mutex, g, mutex_);
+    ACE_GUARD(ACE_Thread_Mutex, g, application_.get_mutex());
 
     typename OpenDDS::DCPS::DDSTraits<T>::MessageSequenceType datas;
     DDS::SampleInfoSeq infos;
@@ -214,7 +213,6 @@ public:
 private:
   Application& application_;
   typename OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_var_type reader_;
-  ACE_Thread_Mutex& mutex_;
 };
 
 int
@@ -247,41 +245,67 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     return EXIT_FAILURE;
   }
 
-  ACE_Thread_Mutex mutex;
+  // Provide endpoints to get data out of the reader.
+  httpserver::webserver ws = httpserver::create_webserver(application.http_port());
 
-  DDS::DataReaderListener_var service_listener(new Listener<HSDS3::Service> (application, mutex));
-  DDS::DataReaderListener_var phone_listener(new Listener<HSDS3::Phone> (application, mutex));
-  DDS::DataReaderListener_var schedule_listener(new Listener<HSDS3::Schedule> (application, mutex));
-  DDS::DataReaderListener_var service_area_listener(new Listener<HSDS3::ServiceArea> (application, mutex));
-  DDS::DataReaderListener_var service_at_location_listener(new Listener<HSDS3::ServiceAtLocation> (application, mutex));
-  DDS::DataReaderListener_var location_listener(new Listener<HSDS3::Location> (application, mutex));
-  DDS::DataReaderListener_var language_listener(new Listener<HSDS3::Language> (application, mutex));
-  DDS::DataReaderListener_var organization_listener(new Listener<HSDS3::Organization> (application, mutex));
-  DDS::DataReaderListener_var funding_listener(new Listener<HSDS3::Funding> (application, mutex));
-  DDS::DataReaderListener_var accessibility_listener(new Listener<HSDS3::Accessibility> (application, mutex));
-  DDS::DataReaderListener_var cost_option_listener(new Listener<HSDS3::CostOption> (application, mutex));
-  DDS::DataReaderListener_var program_listener(new Listener<HSDS3::Program> (application, mutex));
-  DDS::DataReaderListener_var required_document_listener(new Listener<HSDS3::RequiredDocument> (application, mutex));
-  DDS::DataReaderListener_var contact_listener(new Listener<HSDS3::Contact> (application, mutex));
-  DDS::DataReaderListener_var organization_identifier_listener(new Listener<HSDS3::OrganizationIdentifier> (application, mutex));
-  DDS::DataReaderListener_var attribute_listener(new Listener<HSDS3::Attribute> (application, mutex));
-  DDS::DataReaderListener_var metadata_listener(new Listener<HSDS3::Metadata> (application, mutex));
-  DDS::DataReaderListener_var meta_table_description_listener(new Listener<HSDS3::MetaTableDescription> (application, mutex));
-  DDS::DataReaderListener_var taxonomy_listener(new Listener<HSDS3::Taxonomy> (application, mutex));
-  DDS::DataReaderListener_var taxonomy_term_listener(new Listener<HSDS3::TaxonomyTerm> (application, mutex));
-  DDS::DataReaderListener_var address_listener(new Listener<HSDS3::Address> (application, mutex));
+  HsdsResource<HSDS3::Service> service_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Phone> phone_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Schedule> schedule_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::ServiceArea> service_area_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::ServiceAtLocation> service_at_location_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Location> location_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Language> language_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Organization> organization_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Funding> funding_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Accessibility> accessibility_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::CostOption> cost_option_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Program> program_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::RequiredDocument> required_document_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Contact> contact_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::OrganizationIdentifier> organization_identifier_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Attribute> attribute_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Metadata> metadata_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::MetaTableDescription> meta_table_description_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Taxonomy> taxonomy_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Address> address_hsds_resource(application, ws, false);
+
+  ws.start(false);
+
+  // Set up listeners for DDS samples.
+  DDS::DataReaderListener_var service_listener(new Listener<HSDS3::Service> (application));
+  DDS::DataReaderListener_var phone_listener(new Listener<HSDS3::Phone> (application));
+  DDS::DataReaderListener_var schedule_listener(new Listener<HSDS3::Schedule> (application));
+  DDS::DataReaderListener_var service_area_listener(new Listener<HSDS3::ServiceArea> (application));
+  DDS::DataReaderListener_var service_at_location_listener(new Listener<HSDS3::ServiceAtLocation> (application));
+  DDS::DataReaderListener_var location_listener(new Listener<HSDS3::Location> (application));
+  DDS::DataReaderListener_var language_listener(new Listener<HSDS3::Language> (application));
+  DDS::DataReaderListener_var organization_listener(new Listener<HSDS3::Organization> (application));
+  DDS::DataReaderListener_var funding_listener(new Listener<HSDS3::Funding> (application));
+  DDS::DataReaderListener_var accessibility_listener(new Listener<HSDS3::Accessibility> (application));
+  DDS::DataReaderListener_var cost_option_listener(new Listener<HSDS3::CostOption> (application));
+  DDS::DataReaderListener_var program_listener(new Listener<HSDS3::Program> (application));
+  DDS::DataReaderListener_var required_document_listener(new Listener<HSDS3::RequiredDocument> (application));
+  DDS::DataReaderListener_var contact_listener(new Listener<HSDS3::Contact> (application));
+  DDS::DataReaderListener_var organization_identifier_listener(new Listener<HSDS3::OrganizationIdentifier> (application));
+  DDS::DataReaderListener_var attribute_listener(new Listener<HSDS3::Attribute> (application));
+  DDS::DataReaderListener_var metadata_listener(new Listener<HSDS3::Metadata> (application));
+  DDS::DataReaderListener_var meta_table_description_listener(new Listener<HSDS3::MetaTableDescription> (application));
+  DDS::DataReaderListener_var taxonomy_listener(new Listener<HSDS3::Taxonomy> (application));
+  DDS::DataReaderListener_var taxonomy_term_listener(new Listener<HSDS3::TaxonomyTerm> (application));
+  DDS::DataReaderListener_var address_listener(new Listener<HSDS3::Address> (application));
 
   GuardWrapper wrapper;
-  DDS::WaitSet_var ws = new DDS::WaitSet;
-  ws->attach_condition(wrapper.guard());
+  DDS::WaitSet_var waitset = new DDS::WaitSet;
+  waitset->attach_condition(wrapper.guard());
   DDS::ConditionSeq active;
   const DDS::Duration_t period = application.server_poll_period();
 
   bool keep_going = true;
   while (keep_going) {
-    DDS::ReturnCode_t error = ws->wait(active, period);
+    DDS::ReturnCode_t error = waitset->wait(active, period);
     if (error == DDS::RETCODE_TIMEOUT) {
-      ACE_GUARD_RETURN(ACE_Thread_Mutex, g, mutex, EXIT_FAILURE);
+      ACE_GUARD_RETURN(ACE_Thread_Mutex, g, application.get_mutex(), EXIT_FAILURE);
 
       if (!application.server_url().empty()) {
         try {
@@ -311,7 +335,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     }
   }
 
-  ws->detach_condition(wrapper.guard());
+  waitset->detach_condition(wrapper.guard());
 
   application.shutdown();
 
