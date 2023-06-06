@@ -427,6 +427,9 @@ private:
     std::stringstream ss;
     ss << application_.transaction();
     response->with_header("Transaction", ss.str());
+    if (!application_.access_control_allow_origin().empty()) {
+      response->with_header("Access-Control-Allow-Origin", application_.access_control_allow_origin());
+    }
   }
 
   template <typename T>

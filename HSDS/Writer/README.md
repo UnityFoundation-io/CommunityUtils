@@ -11,6 +11,7 @@ It may be useful to create a wrapper script that defines these variables.
 * `DPM_PASSWORD` - the password of the application in the DPM
 * `DPM_NONCE` - an alphanumeric string that distinguishes this instance of JsonWriter
 * `HTTP_PORT` - the listening port of the HTTP API (default 8080)
+* `ACCESS_CONTROL_ALLOW_ORIGIN` - the content of the Access-Control-Allow-Origin HTTP header if not empty
 * `CREATE_WRITERS` - 0 or 1 indicating that writers should be created and used (default 1)
 
 Using `CREATE_WRITERS=0` is useful for standing up an API to test the web hook capabilities of the Reader.

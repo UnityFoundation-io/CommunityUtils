@@ -311,6 +311,7 @@ private:
   void add_headers(std::shared_ptr<httpserver::http_response> response) const
   {
     response->with_header("Total", OpenDDS::DCPS::to_dds_string(this->unit_.container.size()));
+    response->with_header("Access-Control-Expose-Headers", "Offset, Count, Total");
   }
 };
 
