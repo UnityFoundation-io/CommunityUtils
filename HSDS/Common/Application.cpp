@@ -180,6 +180,11 @@ Application::load_environment_variables()
   if (e) {
     server_poll_period_.sec = ACE_OS::atoi(e);
   }
+
+  e = getenv("ACCESS_CONTROL_ALLOW_ORIGIN");
+  if (e) {
+    access_control_allow_origin_ = e;
+  }
 }
 
 struct LogTopicName {

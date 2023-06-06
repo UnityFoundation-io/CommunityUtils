@@ -88,6 +88,8 @@ public:
   void transaction(uint64_t t) { transaction_ = t; }
   void increment_transaction() { ++transaction_; }
 
+  const std::string& access_control_allow_origin() const { return access_control_allow_origin_; }
+
   unsigned short http_port() const { return http_port_; }
   bool create_writers() const { return create_writers_; }
   const std::string& server_url() const { return server_url_; }
@@ -434,6 +436,8 @@ public:
   std::string relay_config_url_;
   std::string data_path_;
   DDS::DomainId_t domain_id_;
+
+  std::string access_control_allow_origin_;
 
   unsigned short http_port_;
   bool create_writers_;
