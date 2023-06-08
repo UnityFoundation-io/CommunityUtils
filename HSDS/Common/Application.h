@@ -66,6 +66,8 @@ public:
   {
     server_poll_period_.sec = 300;
     server_poll_period_.nanosec = 0;
+    reader_stats_interval_.sec = 15;
+    reader_stats_interval_.nanosec = 0;
   }
 
   void load_environment_variables();
@@ -100,6 +102,10 @@ public:
     } else {
       return server_poll_period_;
     }
+  }
+  DDS::Duration_t reader_stats_interval() const
+  {
+    return reader_stats_interval_;
   }
 
   template <typename T>
@@ -443,6 +449,7 @@ public:
   bool create_writers_;
   std::string server_url_;
   DDS::Duration_t server_poll_period_;
+  DDS::Duration_t reader_stats_interval_;
 
   std::string identity_ca_;
   std::string permissions_ca_;

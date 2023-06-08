@@ -185,6 +185,11 @@ Application::load_environment_variables()
   if (e) {
     access_control_allow_origin_ = e;
   }
+
+  e = getenv("READER_STATS_INTERVAL");
+  if (e) {
+    reader_stats_interval_.sec = ACE_OS::atoi(e);
+  }
 }
 
 struct LogTopicName {
@@ -212,6 +217,8 @@ Application::dump_configuration() const
   ACE_DEBUG((LM_INFO, "CREATE_WRITERS=%d\n", create_writers_));
   ACE_DEBUG((LM_INFO, "SERVER_URL=%C\n", server_url_.c_str()));
   ACE_DEBUG((LM_INFO, "SERVER_POLL_PERIOD=%d\n", server_poll_period_.sec));
+  ACE_DEBUG((LM_INFO, "ACCESS_CONTROL_ALLOW_ORIGIN=%C\n", access_control_allow_origin_.c_str()));
+  ACE_DEBUG((LM_INFO, "READER_STATS_INTERVAL=%d\n", reader_stats_interval_.sec));
 }
 
 DDS::ReturnCode_t

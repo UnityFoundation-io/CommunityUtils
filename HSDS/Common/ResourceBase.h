@@ -14,7 +14,7 @@ class ErrorResponse {
 public:
   ErrorResponse()
     : status_(httpserver::http::http_utils::http_bad_request)
-    , message_("OK")
+    , message_("Bad Request")
   {}
 
   static ErrorResponse make_bad_request(const std::string& message)

@@ -14,6 +14,8 @@
 
 #include <curl/curl.h>
 
+using namespace OpenDDS;
+
 using curl::curl_easy;
 using curl::curl_easy_exception;
 using curl::curlcpp_traceback;
@@ -215,6 +217,165 @@ private:
   typename OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_var_type reader_;
 };
 
+struct DataPoint {
+  DCPS::SystemTimePoint capture_time;
+  size_t organization_count;
+  size_t location_count;
+  size_t service_count;
+  long organization_writer_count;
+  long location_writer_count;
+  long service_writer_count;
+};
+
+class Stats {
+public:
+  Stats(DCPS::TimeDuration period) : period_(period) {}
+
+  void insert(DataPoint dp)
+  {
+    ACE_GUARD(ACE_Thread_Mutex, g, datapoints_mutex_);
+    datapoints_.push_back(dp);
+  }
+
+  vector<DataPoint> query(DCPS::TimeDuration duration)
+  {
+    const DCPS::SystemTimePoint now = DCPS::SystemTimePoint::now();
+
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, datapoints_mutex_, vector<DataPoint>());
+    if (now.value() <= duration.value()) {
+      return datapoints_;
+    }
+
+    vector<DataPoint> result;
+    const DCPS::SystemTimePoint start_timepoint = now - duration;
+    for (const_iterator it = datapoints_.rbegin(); it != datapoints_.rend(); ++it) {
+      if (it->capture_time < start_timepoint) {
+        break;
+      }
+      result.insert(result.begin(), *it);
+    }
+    return result;
+  }
+
+  vector<DataPoint> query()
+  {
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, datapoints_mutex_, vector<DataPoint>());
+    return datapoints_;
+  }
+
+private:
+  DCPS::TimeDuration period_;
+  ACE_Thread_Mutex datapoints_mutex_;
+  vector<DataPoint> datapoints_;
+};
+
+Stats stats;
+
+void collect_datapoint(const Application& application)
+{
+  DataPoint dp;
+  dp.capture_time = DCPS::SystemTimePoint::now();
+
+  ACE_GUARD(ACE_Thread_Mutex, g, application.get_mutex());
+  const Unit<HSDS3::Organization>& organization_unit = application.unit<HSDS3::Organization>();
+  const Unit<HSDS3::Location>& location_unit = application.unit<HSDS3::Location>();
+  const Unit<HSDS3::Service>& service_unit = application.unit<HSDS3::Service>();
+  dp.organization_count = organization_unit.container.size();
+  dp.location_count = location_unit.container.size();
+  dp.service_count = service_unit.container.size();
+
+  DDS::InstanceHandleSeq handles;
+  if (organization_unit.reader->get_matched_publications(handles) == DDS::RETCODE_OK) {
+    dp.organization_writer_count = handles.length();
+  } else {
+    // Writer count information is not available.
+    dp.organization_writer_count = -1;
+  }
+
+  if (location_unit.reader->get_matched_publications(handles) == DDS::RETCODE_OK) {
+    dp.location_writer_count = handles.length();
+  } else {
+    dp.location_writer_count = -1;
+  }
+
+  if (service_unit.reader->get_matched_publications(handles) == DDS::RETCODE_OK) {
+    dp.service_writer_count = handles.length();
+  } else {
+    dp.service_writer_count = -1;
+  }
+
+  stats.insert(dp);
+}
+
+// TODO(sonndinh): Spawn a separate thread to run this function.
+void run_stats(const Application& application)
+{
+  GuardWrapper wrapper;
+  DDS::WaitSet_var ws = new DDS::WaitSet;
+  ws->attach_condition(wrapper.guard());
+  DDS::ConditionSeq active;
+
+  bool keep_going = true;
+  while (keep_going) {
+    DDS::ReturnCode_t ret = ws->wait(active, application.reader_stats_interval());
+    if (ret == DDS::RETCODE_TIMEOUT) {
+      collect_datapoint(application);
+    } else if (ret != DDS::RETCODE_OK) {
+      ACE_ERROR((LM_ERROR, "ERROR: run_stats: wait failed!\n"));
+    }
+
+    for (unsigned int i = 0; keep_going && i < active.length(); ++i) {
+      if (active[i] == wrapper.guard()) {
+        keep_going = false;
+      }
+    }
+  }
+
+  ws->detach_condition(wrapper.guard());
+}
+
+class StatsResource : public httpserver::http_resource {
+public:
+  StatsResource(httpserver::webserver& ws)
+  {
+    disallow_all();
+    set_allowing("GET", true);
+    ws.register_resource("/hsds3/organization/statistics", this);
+  }
+
+  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request)
+  {
+    const vector<DataPoint> data = stats.query();
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    DCPS::JsonValueWriter<rapidjson::Writer<rapidjson::StringBuffer> > jvw(writer);
+
+    jvw.begin_sequence();
+    for (size_t i = 0; i < data.size(); ++i) {
+      jvw.begin_element(i);
+      jvw.begin_struct();
+      jvw.begin_struct_member(XTypes::MemberDescriptorImpl("timestamp", false));
+      const ACE_CDR::Float timestamp = data[i].capture_time.value().get_msec() * (1.0/1000);
+      jvw.write_float32(timestamp);
+      jvw.end_struct_member();
+      jvw.begin_struct_member(XTypes::MemberDescriptorImpl("count", false));
+      jvw.write_uint64(data[i].organization_count);
+      jvw.end_struct_member();
+      jvw.begin_struct_member(XTypes::MemberDescriptorImpl("writers", false));
+      jvw.write_int32(data[i].organization_writer_count);
+      jvw.end_struct_member();
+      jvw.end_struct();
+      jvw.end_element();
+    }
+    jvw.end_sequence();
+    writer.Flush();
+
+    return std::shared_ptr<httpserver::http_response>(new httpserver::string_response(buffer.GetString(),
+                                                                                      httpserver::http::http_utils::http_ok,
+                                                                                      "application/json"));
+  }
+}
+
 int
 ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 {
@@ -269,6 +430,8 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   HsdsResource<HSDS3::Taxonomy> taxonomy_hsds_resource(application, ws, false);
   HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, ws, false);
   HsdsResource<HSDS3::Address> address_hsds_resource(application, ws, false);
+
+  StatsResource stats_resource(ws);
 
   ws.start(false);
 

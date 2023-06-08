@@ -24,7 +24,8 @@ public:
     ws.register_resource(application.unit<T>().endpoint + "/{dpmgid}/{id}", this);
   }
 
-  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request)
+  {
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -67,7 +68,8 @@ public:
     return this->respond_with_json(OpenDDS::DCPS::to_json(element));
   }
 
-  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request)
+  {
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -90,7 +92,8 @@ public:
     return this->respond_with_json(OpenDDS::DCPS::to_json(*pos));
   }
 
-  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request& request)
+  {
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -136,7 +139,8 @@ public:
     ws.register_resource(application.unit<T>().endpoint, this);
   }
 
-  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request)
+  {
     typename UnitResourceBase<T>::ContainerType new_map;
 
     // Parse the input.
@@ -200,7 +204,8 @@ public:
     return this->respond_with_no_content();
   }
 
-  const std::shared_ptr<httpserver::http_response> render_POST(const httpserver::http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_POST(const httpserver::http_request& request)
+  {
     std::vector<T> list;
 
     // Parse the input.
@@ -244,7 +249,8 @@ public:
     return this->respond_with_no_content();
   }
 
-  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
+  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request)
+  {
     size_t offset = 0;
     size_t count = this->unit_.container.size();
 
@@ -285,7 +291,8 @@ public:
     return response;
   }
 
-  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request&) {
+  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request&)
+  {
     ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
                      this->respond(ErrorResponse::make_internal_server_error()));
     // Unregister.
