@@ -167,6 +167,12 @@ public:
     DDS::ReturnCode_t retcode = DDS::RETCODE_OK;
     Unit<T>& unit = this->unit<T>();
 
+    const auto pos = unit.container.find(element);
+    if (pos != unit.container.end() && *pos == element) {
+      // No change.
+      return retcode;
+    }
+
     // Save.
     unit.container.insert(element);
 

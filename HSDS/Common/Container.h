@@ -15,6 +15,7 @@ public:
   typedef std::pair<std::string, std::string> KeyType;
   typedef std::map<KeyType, size_t> MapType;
   typedef typename ListType::const_iterator const_iterator;
+  typedef typename MapType::const_iterator const_ordered_iterator;
 
   const_iterator find(const KeyType& key) const
   {
@@ -28,8 +29,20 @@ public:
     return pos2;
   }
 
+  const_iterator find(const T& value) const
+  {
+    return find(KeyType(value.dpmgid(), value.id()));
+  }
+
   const_iterator begin() const { return list_.begin(); }
   const_iterator end() const { return list_.end(); }
+  const_ordered_iterator ordered_begin() const { return map_.begin(); }
+  const_ordered_iterator ordered_end() const { return map_.end(); }
+
+  const T& at(size_t idx) const
+  {
+    return list_.at(idx);
+  }
 
   void insert(const T& value)
   {
