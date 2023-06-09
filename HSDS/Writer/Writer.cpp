@@ -508,33 +508,56 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   }
 
   // TODO: Request/response logging.
-  httpserver::webserver ws = httpserver::create_webserver(application.http_port());
+  httpserver::webserver webserver = httpserver::create_webserver(application.http_port());
 
   // Create /hsds endpoints.
-  HsdsResource<HSDS3::Service> service_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Phone> phone_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Schedule> schedule_hsds_resource(application, ws);
-  HsdsResource<HSDS3::ServiceArea> service_area_hsds_resource(application, ws);
-  HsdsResource<HSDS3::ServiceAtLocation> service_at_location_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Location> location_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Language> language_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Organization> organization_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Funding> funding_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Accessibility> accessibility_hsds_resource(application, ws);
-  HsdsResource<HSDS3::CostOption> cost_option_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Program> program_hsds_resource(application, ws);
-  HsdsResource<HSDS3::RequiredDocument> required_document_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Contact> contact_hsds_resource(application, ws);
-  HsdsResource<HSDS3::OrganizationIdentifier> organization_identifier_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Attribute> attribute_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Metadata> metadata_hsds_resource(application, ws);
-  HsdsResource<HSDS3::MetaTableDescription> meta_table_description_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Taxonomy> taxonomy_hsds_resource(application, ws);
-  HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, ws);
-  HsdsResource<HSDS3::Address> address_hsds_resource(application, ws);
+  HsdsResource<HSDS3::Service> service_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Phone> phone_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Schedule> schedule_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::ServiceArea> service_area_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::ServiceAtLocation> service_at_location_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Location> location_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Language> language_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Organization> organization_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Funding> funding_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Accessibility> accessibility_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::CostOption> cost_option_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Program> program_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::RequiredDocument> required_document_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Contact> contact_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::OrganizationIdentifier> organization_identifier_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Attribute> attribute_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Metadata> metadata_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::MetaTableDescription> meta_table_description_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Taxonomy> taxonomy_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, webserver);
+  HsdsResource<HSDS3::Address> address_hsds_resource(application, webserver);
 
-  ws.start(true);
+  webserver.start(false);
 
+  GuardWrapper wrapper;
+  DDS::WaitSet_var ws = new DDS::WaitSet;
+  ws->attach_condition(wrapper.guard());
+  DDS::ConditionSeq active;
+
+  bool keep_going = true;
+  const DDS::Duration_t infinite = { DDS::DURATION_INFINITE_SEC, DDS::DURATION_INFINITE_NSEC };
+  while (keep_going) {
+    const DDS::ReturnCode_t error = ws->wait(active, infinite);
+    if (error != DDS::RETCODE_OK) {
+      ACE_ERROR((LM_ERROR, "ERROR: wait failed %C\n", OpenDDS::DCPS::retcode_to_string(error)));
+    }
+
+    for (unsigned int i = 0; keep_going && i != active.length(); ++i) {
+      if (active[i] == wrapper.guard()) {
+        keep_going = false;
+      }
+    }
+  }
+
+  ws->detach_condition(wrapper.guard());
+
+  webserver.stop();
   application.shutdown();
 
   return EXIT_SUCCESS;
