@@ -34,8 +34,9 @@ public:
       jvw.begin_element(i);
       jvw.begin_struct();
       jvw.begin_struct_member(OpenDDS::XTypes::MemberDescriptorImpl("timestamp", false));
-      const ACE_CDR::Float timestamp = data[i].timestamp.value().get_msec() * (1.0/1000);
-      jvw.write_float32(timestamp);
+      const ACE_CDR::Double timestamp = data[i].timestamp.value().sec() +
+        (data[i].timestamp.value().usec()*1.0)/1000000;
+      jvw.write_float64(timestamp);
       jvw.end_struct_member();
       jvw.begin_struct_member(OpenDDS::XTypes::MemberDescriptorImpl("count", false));
       jvw.write_uint64(data[i].record_count);

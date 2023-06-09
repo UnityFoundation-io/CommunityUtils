@@ -77,8 +77,8 @@ private:
   {
     std::vector<DataPoint> result(stats_.size());
     size_t i = 0;
-    for (StatsContainer::const_iterator it = stats_.begin(); it != stats_.end(); ++it) {
-      result[i++] = it->second;
+    for (StatsContainer::const_iterator it = stats_.begin(); it != stats_.end(); ++it, ++i) {
+      result[i] = it->second;
     }
     return result;
   }
