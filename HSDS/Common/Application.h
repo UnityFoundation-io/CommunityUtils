@@ -63,6 +63,9 @@ public:
     , service_at_location_("SERVICE_AT_LOCATION_TOPIC", HSDS3::SERVICE_AT_LOCATION_ENDPOINT, HSDS3::SERVICE_AT_LOCATION_JSON_FILE)
     , taxonomy_("TAXONOMY_TOPIC", HSDS3::TAXONOMY_ENDPOINT, HSDS3::TAXONOMY_JSON_FILE)
     , taxonomy_term_("TAXONOMY_TERM_TOPIC", HSDS3::TAXONOMY_TERM_ENDPOINT, HSDS3::TAXONOMY_TERM_JSON_FILE)
+    , participant_count_(0)
+    , publication_count_(0)
+    , subscription_count_(0)
   {
     server_poll_period_.sec = 300;
     server_poll_period_.nanosec = 0;
@@ -433,6 +436,16 @@ public:
 
   ACE_Thread_Mutex& get_mutex() { return mutex_; }
 
+  template <typename T>
+  DDS::DataReader_var reader() const;
+
+  template <typename T>
+  void set_count(size_t count);
+
+  size_t participant_count() const { return participant_count_; }
+  size_t publication_count() const { return publication_count_; }
+  size_t subscription_count() const { return subscription_count_; }
+
  private:
   std::string dpm_url_;
   std::string dpm_gid_;
@@ -494,6 +507,10 @@ public:
   Unit<HSDS3::ServiceAtLocation> service_at_location_;
   Unit<HSDS3::Taxonomy> taxonomy_;
   Unit<HSDS3::TaxonomyTerm> taxonomy_term_;
+
+  size_t participant_count_;
+  size_t publication_count_;
+  size_t subscription_count_;
 };
 
 // template <>

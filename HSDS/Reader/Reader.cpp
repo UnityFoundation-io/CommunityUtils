@@ -96,12 +96,12 @@ void synchronize(Application& application, curl_easy& easy)
 }
 
 template<typename T>
-class Listener : public DDS::DataReaderListener
+class HsdsListener : public DDS::DataReaderListener
 {
 public:
   typedef Container<T> ContainerType;
 
-  Listener(Application& application)
+  HsdsListener(Application& application)
     : application_(application)
     , reader_(application.unit<T>().reader)
   {
@@ -215,6 +215,128 @@ private:
   typename OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_var_type reader_;
 };
 
+template<typename T>
+class DdsListener : public DDS::DataReaderListener
+{
+public:
+  DdsListener(Application& application)
+    : application_(application)
+  {
+    DDS::DataReader_var reader = application.reader<T>();
+    reader_ = OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_narrow(reader);
+    if (!reader_) {
+      ACE_ERROR((LM_ERROR, "ERROR: narrow failed!\n"));
+    }
+
+    reader_->set_listener(this, DDS::DATA_AVAILABLE_STATUS);
+    on_data_available(reader_);
+  }
+
+  void on_requested_deadline_missed(DDS::DataReader_ptr,
+                                    const DDS::RequestedDeadlineMissedStatus&)
+  {}
+
+  void on_requested_incompatible_qos(DDS::DataReader_ptr,
+                                     const DDS::RequestedIncompatibleQosStatus&)
+  {}
+
+  void on_sample_rejected(DDS::DataReader_ptr,
+                          const DDS::SampleRejectedStatus&)
+  {}
+
+  void on_liveliness_changed(DDS::DataReader_ptr,
+                             const DDS::LivelinessChangedStatus&)
+  {}
+
+  void on_data_available(DDS::DataReader_ptr)
+  {
+    ACE_GUARD(ACE_Thread_Mutex, g, application_.get_mutex());
+
+    typename OpenDDS::DCPS::DDSTraits<T>::MessageSequenceType datas;
+    DDS::SampleInfoSeq infos;
+
+    const DDS::ReturnCode_t error =
+      reader_->take(datas, infos, DDS::LENGTH_UNLIMITED,
+                    DDS::NOT_READ_SAMPLE_STATE, DDS::ANY_VIEW_STATE, DDS::ANY_INSTANCE_STATE);
+    if (error != DDS::RETCODE_OK && error != DDS::RETCODE_NO_DATA) {
+      ACE_ERROR((LM_ERROR, "ERROR: take failed %C\n", OpenDDS::DCPS::retcode_to_string(error)));
+    }
+
+    for (CORBA::ULong idx = 0; idx != infos.length(); ++idx) {
+      const T& data = datas[idx];
+      const DDS::SampleInfo& info = infos[idx];
+
+      if (info.instance_state != DDS::ALIVE_INSTANCE_STATE) {
+        keys_.erase(data.key);
+      } else if (info.valid_data) {
+        keys_.insert(data.key);
+      }
+    }
+
+    application_.set_count<T>(keys_.size());
+  }
+
+  void on_subscription_matched(DDS::DataReader_ptr,
+                               const DDS::SubscriptionMatchedStatus&)
+  {}
+
+  void on_sample_lost(DDS::DataReader_ptr,
+                      const DDS::SampleLostStatus&)
+  {}
+
+private:
+  Application& application_;
+  typename OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_var_type reader_;
+  std::set<DDS::BuiltinTopicKey_t, OpenDDS::DCPS::BuiltinTopicKey_tKeyLessThan> keys_;
+};
+
+class DdsStatsResource : public httpserver::http_resource {
+public:
+  DdsStatsResource(StatsApplication& stats_app,
+                   httpserver::webserver& ws,
+                   const std::string& endpoint)
+    : stats_app_(stats_app)
+  {
+    disallow_all();
+    set_allowing("GET", true);
+    ws.register_resource(endpoint, this);
+  }
+
+  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& /*request*/)
+  {
+    ACE_Guard<ACE_Thread_Mutex> guard(stats_app_.application().get_mutex());
+
+    rapidjson::StringBuffer buffer;
+    rapidjson::Writer<rapidjson::StringBuffer> writer(buffer);
+    OpenDDS::DCPS::JsonValueWriter<rapidjson::Writer<rapidjson::StringBuffer> > jvw(writer);
+
+    jvw.begin_struct();
+    jvw.begin_struct_member(OpenDDS::XTypes::MemberDescriptorImpl("participants", false));
+    jvw.write_uint64(stats_app_.application().participant_count());
+    jvw.end_struct_member();
+    jvw.begin_struct_member(OpenDDS::XTypes::MemberDescriptorImpl("publications", false));
+    jvw.write_uint64(stats_app_.application().publication_count());
+    jvw.end_struct_member();
+    jvw.begin_struct_member(OpenDDS::XTypes::MemberDescriptorImpl("subscriptions", false));
+    jvw.write_uint64(stats_app_.application().subscription_count());
+    jvw.end_struct_member();
+    jvw.end_struct();
+    writer.Flush();
+
+    std::shared_ptr<httpserver::http_response> response(new httpserver::string_response(buffer.GetString(),
+                                                                                        httpserver::http::http_utils::http_ok,
+                                                                                        "application/json"));
+    if (!stats_app_.application().access_control_allow_origin().empty()) {
+      response->with_header("Access-Control-Allow-Origin", stats_app_.application().access_control_allow_origin());
+    }
+
+    return response;
+  }
+
+private:
+  StatsApplication& stats_app_;
+};
+
 int
 ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 {
@@ -246,27 +368,31 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   }
 
   // Set up listeners for DDS samples.
-  DDS::DataReaderListener_var service_listener(new Listener<HSDS3::Service> (application));
-  DDS::DataReaderListener_var phone_listener(new Listener<HSDS3::Phone> (application));
-  DDS::DataReaderListener_var schedule_listener(new Listener<HSDS3::Schedule> (application));
-  DDS::DataReaderListener_var service_area_listener(new Listener<HSDS3::ServiceArea> (application));
-  DDS::DataReaderListener_var service_at_location_listener(new Listener<HSDS3::ServiceAtLocation> (application));
-  DDS::DataReaderListener_var location_listener(new Listener<HSDS3::Location> (application));
-  DDS::DataReaderListener_var language_listener(new Listener<HSDS3::Language> (application));
-  DDS::DataReaderListener_var organization_listener(new Listener<HSDS3::Organization> (application));
-  DDS::DataReaderListener_var funding_listener(new Listener<HSDS3::Funding> (application));
-  DDS::DataReaderListener_var accessibility_listener(new Listener<HSDS3::Accessibility> (application));
-  DDS::DataReaderListener_var cost_option_listener(new Listener<HSDS3::CostOption> (application));
-  DDS::DataReaderListener_var program_listener(new Listener<HSDS3::Program> (application));
-  DDS::DataReaderListener_var required_document_listener(new Listener<HSDS3::RequiredDocument> (application));
-  DDS::DataReaderListener_var contact_listener(new Listener<HSDS3::Contact> (application));
-  DDS::DataReaderListener_var organization_identifier_listener(new Listener<HSDS3::OrganizationIdentifier> (application));
-  DDS::DataReaderListener_var attribute_listener(new Listener<HSDS3::Attribute> (application));
-  DDS::DataReaderListener_var metadata_listener(new Listener<HSDS3::Metadata> (application));
-  DDS::DataReaderListener_var meta_table_description_listener(new Listener<HSDS3::MetaTableDescription> (application));
-  DDS::DataReaderListener_var taxonomy_listener(new Listener<HSDS3::Taxonomy> (application));
-  DDS::DataReaderListener_var taxonomy_term_listener(new Listener<HSDS3::TaxonomyTerm> (application));
-  DDS::DataReaderListener_var address_listener(new Listener<HSDS3::Address> (application));
+  DDS::DataReaderListener_var service_listener(new HsdsListener<HSDS3::Service> (application));
+  DDS::DataReaderListener_var phone_listener(new HsdsListener<HSDS3::Phone> (application));
+  DDS::DataReaderListener_var schedule_listener(new HsdsListener<HSDS3::Schedule> (application));
+  DDS::DataReaderListener_var service_area_listener(new HsdsListener<HSDS3::ServiceArea> (application));
+  DDS::DataReaderListener_var service_at_location_listener(new HsdsListener<HSDS3::ServiceAtLocation> (application));
+  DDS::DataReaderListener_var location_listener(new HsdsListener<HSDS3::Location> (application));
+  DDS::DataReaderListener_var language_listener(new HsdsListener<HSDS3::Language> (application));
+  DDS::DataReaderListener_var organization_listener(new HsdsListener<HSDS3::Organization> (application));
+  DDS::DataReaderListener_var funding_listener(new HsdsListener<HSDS3::Funding> (application));
+  DDS::DataReaderListener_var accessibility_listener(new HsdsListener<HSDS3::Accessibility> (application));
+  DDS::DataReaderListener_var cost_option_listener(new HsdsListener<HSDS3::CostOption> (application));
+  DDS::DataReaderListener_var program_listener(new HsdsListener<HSDS3::Program> (application));
+  DDS::DataReaderListener_var required_document_listener(new HsdsListener<HSDS3::RequiredDocument> (application));
+  DDS::DataReaderListener_var contact_listener(new HsdsListener<HSDS3::Contact> (application));
+  DDS::DataReaderListener_var organization_identifier_listener(new HsdsListener<HSDS3::OrganizationIdentifier> (application));
+  DDS::DataReaderListener_var attribute_listener(new HsdsListener<HSDS3::Attribute> (application));
+  DDS::DataReaderListener_var metadata_listener(new HsdsListener<HSDS3::Metadata> (application));
+  DDS::DataReaderListener_var meta_table_description_listener(new HsdsListener<HSDS3::MetaTableDescription> (application));
+  DDS::DataReaderListener_var taxonomy_listener(new HsdsListener<HSDS3::Taxonomy> (application));
+  DDS::DataReaderListener_var taxonomy_term_listener(new HsdsListener<HSDS3::TaxonomyTerm> (application));
+  DDS::DataReaderListener_var address_listener(new HsdsListener<HSDS3::Address> (application));
+
+  DDS::DataReaderListener_var participant_listener(new DdsListener<DDS::ParticipantBuiltinTopicData> (application));
+  DDS::DataReaderListener_var publication_listener(new DdsListener<DDS::PublicationBuiltinTopicData> (application));
+  DDS::DataReaderListener_var subscription_listener(new DdsListener<DDS::SubscriptionBuiltinTopicData> (application));
 
   // Provide endpoints to get data out of the reader.
   httpserver::webserver webserver = httpserver::create_webserver(application.http_port());
@@ -295,12 +421,14 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 
 
   // Set up application and resources for statistics.
-  const size_t STATS_CAPACITY = 1000;
+  const size_t STATS_CAPACITY = 100;
   StatsApplication stats_app(application, STATS_CAPACITY);
 
   StatsResource<HSDS3::Organization> organization_stats_resource(stats_app, webserver, "/hsds3/organization/statistics");
   StatsResource<HSDS3::Location> location_stats_resource(stats_app, webserver, "/hsds3/location/statistics");
   StatsResource<HSDS3::Service> service_stats_resource(stats_app, webserver, "/hsds3/service/statistics");
+
+  DdsStatsResource dds_stats_resource(stats_app, webserver, "/dds/statistics");
 
   webserver.start(false);
 
@@ -347,6 +475,10 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   // }
 
   // waitset->detach_condition(wrapper.guard());
+
+  application.reader<DDS::ParticipantBuiltinTopicData>()->set_listener(0, 0);
+  application.reader<DDS::PublicationBuiltinTopicData>()->set_listener(0, 0);
+  application.reader<DDS::SubscriptionBuiltinTopicData>()->set_listener(0, 0);
 
   webserver.stop();
   application.shutdown();

@@ -32,9 +32,10 @@ void StatsApplication::run()
 
 void StatsApplication::collect_datapoints()
 {
-  organization_stats_.collect_datapoint();
-  location_stats_.collect_datapoint();
-  service_stats_.collect_datapoint();
+  const OpenDDS::DCPS::SystemTimePoint now = OpenDDS::DCPS::SystemTimePoint::now();
+  organization_stats_.collect_datapoint(now);
+  location_stats_.collect_datapoint(now);
+  service_stats_.collect_datapoint(now);
 }
 
 template<> Stats<HSDS3::Organization>& StatsApplication::get_stats<HSDS3::Organization>()
