@@ -50,9 +50,14 @@ public:
     jvw.end_sequence();
     writer.Flush();
 
-    return std::shared_ptr<httpserver::http_response>(new httpserver::string_response(buffer.GetString(),
-                                                                                      httpserver::http::http_utils::http_ok,
-                                                                                      "application/json"));
+    std::shared_ptr<httpserver::http_response> response(new httpserver::string_response(buffer.GetString(),
+                                                                                        httpserver::http::http_utils::http_ok,
+                                                                                        "application/json"));
+    if (!stats_app_.application().access_control_allow_origin().empty()) {
+      response->with_header("Access-Control-Allow-Origin", stats_app_.application().access_control_allow_origin());
+    }
+
+    return response;
   }
 
 private:

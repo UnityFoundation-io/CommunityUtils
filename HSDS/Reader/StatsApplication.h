@@ -17,6 +17,8 @@ public:
   template <typename T>
   Stats<T>& get_stats();
 
+  const Application& application() const { return application_; }
+
 private:
   void collect_datapoints();
 
