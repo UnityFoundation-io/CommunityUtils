@@ -84,12 +84,13 @@ private:
   }
 
   Application& application_;
-  ACE_Thread_Mutex stats_mutex_;
 
   // Maximum number of entries for statistics.
   const size_t capacity_;
 
+  // TODO: Can use a circular buffer for better performance.
   typedef std::map<OpenDDS::DCPS::SystemTimePoint, DataPoint> StatsContainer;
+  ACE_Thread_Mutex stats_mutex_;
   StatsContainer stats_;
 };
 
