@@ -13,11 +13,11 @@ void StatsApplication::run()
 
   bool keep_going = true;
   while (keep_going) {
-    DDS::ReturnCode_t ret = ws->wait(active, application_.reader_stats_interval());
+    const DDS::ReturnCode_t ret = ws->wait(active, application_.reader_stats_interval());
     if (ret == DDS::RETCODE_TIMEOUT) {
       collect_datapoints();
     } else if (ret != DDS::RETCODE_OK) {
-      ACE_ERROR((LM_ERROR, "ERROR: StatsApplication::run_stats: wait failed!\n"));
+      ACE_ERROR((LM_ERROR, "ERROR: StatsApplication::run_stats: wait failed: %C\n", OpenDDS::DCPS::retcode_to_string(ret)));
     }
 
     for (unsigned int i = 0; keep_going && i < active.length(); ++i) {

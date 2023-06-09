@@ -269,40 +269,40 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   DDS::DataReaderListener_var address_listener(new Listener<HSDS3::Address> (application));
 
   // Provide endpoints to get data out of the reader.
-  httpserver::webserver ws = httpserver::create_webserver(application.http_port());
+  httpserver::webserver webserver = httpserver::create_webserver(application.http_port());
 
-  HsdsResource<HSDS3::Service> service_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Phone> phone_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Schedule> schedule_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::ServiceArea> service_area_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::ServiceAtLocation> service_at_location_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Location> location_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Language> language_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Organization> organization_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Funding> funding_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Accessibility> accessibility_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::CostOption> cost_option_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Program> program_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::RequiredDocument> required_document_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Contact> contact_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::OrganizationIdentifier> organization_identifier_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Attribute> attribute_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Metadata> metadata_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::MetaTableDescription> meta_table_description_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Taxonomy> taxonomy_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, ws, false);
-  HsdsResource<HSDS3::Address> address_hsds_resource(application, ws, false);
+  HsdsResource<HSDS3::Service> service_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Phone> phone_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Schedule> schedule_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::ServiceArea> service_area_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::ServiceAtLocation> service_at_location_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Location> location_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Language> language_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Organization> organization_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Funding> funding_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Accessibility> accessibility_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::CostOption> cost_option_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Program> program_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::RequiredDocument> required_document_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Contact> contact_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::OrganizationIdentifier> organization_identifier_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Attribute> attribute_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Metadata> metadata_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::MetaTableDescription> meta_table_description_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Taxonomy> taxonomy_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, webserver, false);
+  HsdsResource<HSDS3::Address> address_hsds_resource(application, webserver, false);
 
 
   // Set up application and resources for statistics.
   const size_t STATS_CAPACITY = 1000;
   StatsApplication stats_app(application, STATS_CAPACITY);
 
-  StatsResource<HSDS3::Organization> organization_stats_resource(stats_app, ws, "/hsds3/organization/statistics");
-  StatsResource<HSDS3::Location> location_stats_resource(stats_app, ws, "/hsds3/location/statistics");
-  StatsResource<HSDS3::Service> service_stats_resource(stats_app, ws, "/hsds3/service/statistics");
+  StatsResource<HSDS3::Organization> organization_stats_resource(stats_app, webserver, "/hsds3/organization/statistics");
+  StatsResource<HSDS3::Location> location_stats_resource(stats_app, webserver, "/hsds3/location/statistics");
+  StatsResource<HSDS3::Service> service_stats_resource(stats_app, webserver, "/hsds3/service/statistics");
 
-  ws.start(false);
+  webserver.start(false);
 
   stats_app.run();
 
@@ -314,7 +314,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 
   // bool keep_going = true;
   // while (keep_going) {
-  //   DDS::ReturnCode_t error = waitset->wait(active, period);
+  //   const DDS::ReturnCode_t error = waitset->wait(active, period);
   //   if (error == DDS::RETCODE_TIMEOUT) {
   //     ACE_GUARD_RETURN(ACE_Thread_Mutex, g, application.get_mutex(), EXIT_FAILURE);
 
@@ -335,9 +335,9 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   //       }
   //     }
 
-  //   } else if (error != DDS::RETCODE_OK) {
-  //     ACE_ERROR((LM_ERROR, "ERROR: wait failed!\n"));
-  //   }
+  // } else if (error != DDS::RETCODE_OK) {
+  //   ACE_ERROR((LM_ERROR, "ERROR: wait failed %C\n", OpenDDS::DCPS::retcode_to_string(error)));
+  // }
 
   //   for (unsigned int i = 0; keep_going && i != active.length(); ++i) {
   //     if (active[i] == wrapper.guard()) {
@@ -348,6 +348,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 
   // waitset->detach_condition(wrapper.guard());
 
+  webserver.stop();
   application.shutdown();
 
   return EXIT_SUCCESS;
