@@ -2,6 +2,8 @@
 
 #include "HsdsResource.h"
 #include "Common.h"
+#include "StatsApplication.h"
+#include "StatsResource.h"
 
 #include <dds/DCPS/DCPS_Utils.h>
 #include <dds/DCPS/JsonValueWriter.h>
@@ -11,8 +13,6 @@
 #include <curlcpp/curl_easy.h>
 #include <curlcpp/curl_exception.h>
 #include <curlcpp/curl_header.h>
-
-#include <curl/curl.h>
 
 using curl::curl_easy;
 using curl::curl_easy_exception;
@@ -245,6 +245,29 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     return EXIT_FAILURE;
   }
 
+  // Set up listeners for DDS samples.
+  DDS::DataReaderListener_var service_listener(new Listener<HSDS3::Service> (application));
+  DDS::DataReaderListener_var phone_listener(new Listener<HSDS3::Phone> (application));
+  DDS::DataReaderListener_var schedule_listener(new Listener<HSDS3::Schedule> (application));
+  DDS::DataReaderListener_var service_area_listener(new Listener<HSDS3::ServiceArea> (application));
+  DDS::DataReaderListener_var service_at_location_listener(new Listener<HSDS3::ServiceAtLocation> (application));
+  DDS::DataReaderListener_var location_listener(new Listener<HSDS3::Location> (application));
+  DDS::DataReaderListener_var language_listener(new Listener<HSDS3::Language> (application));
+  DDS::DataReaderListener_var organization_listener(new Listener<HSDS3::Organization> (application));
+  DDS::DataReaderListener_var funding_listener(new Listener<HSDS3::Funding> (application));
+  DDS::DataReaderListener_var accessibility_listener(new Listener<HSDS3::Accessibility> (application));
+  DDS::DataReaderListener_var cost_option_listener(new Listener<HSDS3::CostOption> (application));
+  DDS::DataReaderListener_var program_listener(new Listener<HSDS3::Program> (application));
+  DDS::DataReaderListener_var required_document_listener(new Listener<HSDS3::RequiredDocument> (application));
+  DDS::DataReaderListener_var contact_listener(new Listener<HSDS3::Contact> (application));
+  DDS::DataReaderListener_var organization_identifier_listener(new Listener<HSDS3::OrganizationIdentifier> (application));
+  DDS::DataReaderListener_var attribute_listener(new Listener<HSDS3::Attribute> (application));
+  DDS::DataReaderListener_var metadata_listener(new Listener<HSDS3::Metadata> (application));
+  DDS::DataReaderListener_var meta_table_description_listener(new Listener<HSDS3::MetaTableDescription> (application));
+  DDS::DataReaderListener_var taxonomy_listener(new Listener<HSDS3::Taxonomy> (application));
+  DDS::DataReaderListener_var taxonomy_term_listener(new Listener<HSDS3::TaxonomyTerm> (application));
+  DDS::DataReaderListener_var address_listener(new Listener<HSDS3::Address> (application));
+
   // Provide endpoints to get data out of the reader.
   httpserver::webserver ws = httpserver::create_webserver(application.http_port());
 
@@ -270,72 +293,60 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   HsdsResource<HSDS3::TaxonomyTerm> taxonomy_term_hsds_resource(application, ws, false);
   HsdsResource<HSDS3::Address> address_hsds_resource(application, ws, false);
 
+
+  // Set up application and resources for statistics.
+  const size_t STATS_CAPACITY = 1000;
+  StatsApplication stats_app(application, STATS_CAPACITY);
+
+  StatsResource<HSDS3::Organization> organization_stats_resource(stats_app, ws, "/hsds3/organization/statistics");
+  StatsResource<HSDS3::Location> location_stats_resource(stats_app, ws, "/hsds3/location/statistics");
+  StatsResource<HSDS3::Service> service_stats_resource(stats_app, ws, "/hsds3/service/statistics");
+
   ws.start(false);
 
-  // Set up listeners for DDS samples.
-  DDS::DataReaderListener_var service_listener(new Listener<HSDS3::Service> (application));
-  DDS::DataReaderListener_var phone_listener(new Listener<HSDS3::Phone> (application));
-  DDS::DataReaderListener_var schedule_listener(new Listener<HSDS3::Schedule> (application));
-  DDS::DataReaderListener_var service_area_listener(new Listener<HSDS3::ServiceArea> (application));
-  DDS::DataReaderListener_var service_at_location_listener(new Listener<HSDS3::ServiceAtLocation> (application));
-  DDS::DataReaderListener_var location_listener(new Listener<HSDS3::Location> (application));
-  DDS::DataReaderListener_var language_listener(new Listener<HSDS3::Language> (application));
-  DDS::DataReaderListener_var organization_listener(new Listener<HSDS3::Organization> (application));
-  DDS::DataReaderListener_var funding_listener(new Listener<HSDS3::Funding> (application));
-  DDS::DataReaderListener_var accessibility_listener(new Listener<HSDS3::Accessibility> (application));
-  DDS::DataReaderListener_var cost_option_listener(new Listener<HSDS3::CostOption> (application));
-  DDS::DataReaderListener_var program_listener(new Listener<HSDS3::Program> (application));
-  DDS::DataReaderListener_var required_document_listener(new Listener<HSDS3::RequiredDocument> (application));
-  DDS::DataReaderListener_var contact_listener(new Listener<HSDS3::Contact> (application));
-  DDS::DataReaderListener_var organization_identifier_listener(new Listener<HSDS3::OrganizationIdentifier> (application));
-  DDS::DataReaderListener_var attribute_listener(new Listener<HSDS3::Attribute> (application));
-  DDS::DataReaderListener_var metadata_listener(new Listener<HSDS3::Metadata> (application));
-  DDS::DataReaderListener_var meta_table_description_listener(new Listener<HSDS3::MetaTableDescription> (application));
-  DDS::DataReaderListener_var taxonomy_listener(new Listener<HSDS3::Taxonomy> (application));
-  DDS::DataReaderListener_var taxonomy_term_listener(new Listener<HSDS3::TaxonomyTerm> (application));
-  DDS::DataReaderListener_var address_listener(new Listener<HSDS3::Address> (application));
+  stats_app.run();
 
-  GuardWrapper wrapper;
-  DDS::WaitSet_var waitset = new DDS::WaitSet;
-  waitset->attach_condition(wrapper.guard());
-  DDS::ConditionSeq active;
-  const DDS::Duration_t period = application.server_poll_period();
+  // GuardWrapper wrapper;
+  // DDS::WaitSet_var waitset = new DDS::WaitSet;
+  // waitset->attach_condition(wrapper.guard());
+  // DDS::ConditionSeq active;
+  // const DDS::Duration_t period = application.server_poll_period();
 
-  bool keep_going = true;
-  while (keep_going) {
-    DDS::ReturnCode_t error = waitset->wait(active, period);
-    if (error == DDS::RETCODE_TIMEOUT) {
-      ACE_GUARD_RETURN(ACE_Thread_Mutex, g, application.get_mutex(), EXIT_FAILURE);
+  // bool keep_going = true;
+  // while (keep_going) {
+  //   DDS::ReturnCode_t error = waitset->wait(active, period);
+  //   if (error == DDS::RETCODE_TIMEOUT) {
+  //     ACE_GUARD_RETURN(ACE_Thread_Mutex, g, application.get_mutex(), EXIT_FAILURE);
 
-      if (!application.server_url().empty()) {
-        try {
-          curl_easy easy;
-          easy.add<CURLOPT_URL>((application.server_url() + application.unit<HSDS3::Organization>().endpoint + "?offset=0&count=0").c_str());
+  //     if (!application.server_url().empty()) {
+  //       try {
+  //         curl_easy easy;
+  //         easy.add<CURLOPT_URL>((application.server_url() + application.unit<HSDS3::Organization>().endpoint + "?offset=0&count=0").c_str());
 
-          easy.perform();
-          synchronize(application, easy);
-          // TODO: Handle output.
-        } catch (curl_easy_exception& error) {
-          // TODO: Error handling.
-          // If you want to get the entire error stack we can do:
-          curlcpp_traceback errors = error.get_traceback();
-          // Otherwise we could print the stack like this:
-          error.print_traceback();
-        }
-      }
+  //         easy.perform();
+  //         synchronize(application, easy);
+  //         // TODO: Handle output.
+  //       } catch (curl_easy_exception& error) {
+  //         // TODO: Error handling.
+  //         // If you want to get the entire error stack we can do:
+  //         curlcpp_traceback errors = error.get_traceback();
+  //         // Otherwise we could print the stack like this:
+  //         error.print_traceback();
+  //       }
+  //     }
 
-    } else if (error != DDS::RETCODE_OK) {
-      ACE_ERROR((LM_ERROR, "ERROR: wait failed!\n"));
-    }
+  //   } else if (error != DDS::RETCODE_OK) {
+  //     ACE_ERROR((LM_ERROR, "ERROR: wait failed!\n"));
+  //   }
 
-    for (unsigned int i = 0; keep_going && i != active.length(); ++i) {
-      if (active[i] == wrapper.guard()) {
-        keep_going = false;
-      }
-    }
-  }
+  //   for (unsigned int i = 0; keep_going && i != active.length(); ++i) {
+  //     if (active[i] == wrapper.guard()) {
+  //       keep_going = false;
+  //     }
+  //   }
+  // }
 
-  waitset->detach_condition(wrapper.guard());
+  // waitset->detach_condition(wrapper.guard());
 
   application.shutdown();
 

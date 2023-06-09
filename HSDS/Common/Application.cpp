@@ -185,6 +185,11 @@ Application::load_environment_variables()
   if (e) {
     access_control_allow_origin_ = e;
   }
+
+  e = getenv("READER_STATS_INTERVAL");
+  if (e) {
+    reader_stats_interval_.sec = ACE_OS::atoi(e);
+  }
 }
 
 struct LogTopicName {
@@ -212,6 +217,8 @@ Application::dump_configuration() const
   ACE_DEBUG((LM_INFO, "CREATE_WRITERS=%d\n", create_writers_));
   ACE_DEBUG((LM_INFO, "SERVER_URL=%C\n", server_url_.c_str()));
   ACE_DEBUG((LM_INFO, "SERVER_POLL_PERIOD=%d\n", server_poll_period_.sec));
+  ACE_DEBUG((LM_INFO, "ACCESS_CONTROL_ALLOW_ORIGIN=%C\n", access_control_allow_origin_.c_str()));
+  ACE_DEBUG((LM_INFO, "READER_STATS_INTERVAL=%d\n", reader_stats_interval_.sec));
 }
 
 DDS::ReturnCode_t
@@ -663,3 +670,25 @@ Application::shutdown()
   domain_participant_factory_->delete_participant(participant_);
   TheServiceParticipant->shutdown();
 }
+
+template<> Unit<HSDS3::Accessibility>& Application::unit<HSDS3::Accessibility>() { return accessibility_; }
+template<> Unit<HSDS3::Address>& Application::unit<HSDS3::Address>() { return address_; }
+template<> Unit<HSDS3::Attribute>& Application::unit<HSDS3::Attribute>() { return attribute_; }
+template<> Unit<HSDS3::Contact>& Application::unit<HSDS3::Contact>() { return contact_; }
+template<> Unit<HSDS3::CostOption>& Application::unit<HSDS3::CostOption>() { return cost_option_; }
+template<> Unit<HSDS3::Funding>& Application::unit<HSDS3::Funding>() { return funding_; }
+template<> Unit<HSDS3::Language>& Application::unit<HSDS3::Language>() { return language_; }
+template<> Unit<HSDS3::Location>& Application::unit<HSDS3::Location>() { return location_; }
+template<> Unit<HSDS3::MetaTableDescription>& Application::unit<HSDS3::MetaTableDescription>() { return meta_table_description_; }
+template<> Unit<HSDS3::Metadata>& Application::unit<HSDS3::Metadata>() { return metadata_; }
+template<> Unit<HSDS3::Organization>& Application::unit<HSDS3::Organization>() { return organization_; }
+template<> Unit<HSDS3::OrganizationIdentifier>& Application::unit<HSDS3::OrganizationIdentifier>() { return organization_identifier_; }
+template<> Unit<HSDS3::Phone>& Application::unit<HSDS3::Phone>() { return phone_; }
+template<> Unit<HSDS3::Program>& Application::unit<HSDS3::Program>() { return program_; }
+template<> Unit<HSDS3::RequiredDocument>& Application::unit<HSDS3::RequiredDocument>() { return required_document_; }
+template<> Unit<HSDS3::Schedule>& Application::unit<HSDS3::Schedule>() { return schedule_; }
+template<> Unit<HSDS3::Service>& Application::unit<HSDS3::Service>() { return service_; }
+template<> Unit<HSDS3::ServiceArea>& Application::unit<HSDS3::ServiceArea>() { return service_area_; }
+template<> Unit<HSDS3::ServiceAtLocation>& Application::unit<HSDS3::ServiceAtLocation>() { return service_at_location_; }
+template<> Unit<HSDS3::Taxonomy>& Application::unit<HSDS3::Taxonomy>() { return taxonomy_; }
+template<> Unit<HSDS3::TaxonomyTerm>& Application::unit<HSDS3::TaxonomyTerm>() { return taxonomy_term_; }
