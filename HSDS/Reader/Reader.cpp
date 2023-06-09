@@ -14,10 +14,6 @@
 #include <curlcpp/curl_exception.h>
 #include <curlcpp/curl_header.h>
 
-#include <curl/curl.h>
-
-using namespace OpenDDS;
-
 using curl::curl_easy;
 using curl::curl_easy_exception;
 using curl::curlcpp_traceback;
@@ -299,7 +295,8 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 
 
   // Set up application and resources for statistics.
-  StatsApplication stats_app(application);
+  const size_t STATS_CAPACITY = 1000;
+  StatsApplication stats_app(application, STATS_CAPACITY);
 
   StatsResource<HSDS3::Organization> organization_stats_resource(stats_app, ws, "/hsds3/organization/statistics");
   StatsResource<HSDS3::Location> location_stats_resource(stats_app, ws, "/hsds3/location/statistics");

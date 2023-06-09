@@ -496,28 +496,6 @@ public:
   Unit<HSDS3::TaxonomyTerm> taxonomy_term_;
 };
 
-template<> Unit<HSDS3::Accessibility>& Application::unit<HSDS3::Accessibility>() { return accessibility_; }
-template<> Unit<HSDS3::Address>& Application::unit<HSDS3::Address>() { return address_; }
-template<> Unit<HSDS3::Attribute>& Application::unit<HSDS3::Attribute>() { return attribute_; }
-template<> Unit<HSDS3::Contact>& Application::unit<HSDS3::Contact>() { return contact_; }
-template<> Unit<HSDS3::CostOption>& Application::unit<HSDS3::CostOption>() { return cost_option_; }
-template<> Unit<HSDS3::Funding>& Application::unit<HSDS3::Funding>() { return funding_; }
-template<> Unit<HSDS3::Language>& Application::unit<HSDS3::Language>() { return language_; }
-template<> Unit<HSDS3::Location>& Application::unit<HSDS3::Location>() { return location_; }
-template<> Unit<HSDS3::MetaTableDescription>& Application::unit<HSDS3::MetaTableDescription>() { return meta_table_description_; }
-template<> Unit<HSDS3::Metadata>& Application::unit<HSDS3::Metadata>() { return metadata_; }
-template<> Unit<HSDS3::Organization>& Application::unit<HSDS3::Organization>() { return organization_; }
-template<> Unit<HSDS3::OrganizationIdentifier>& Application::unit<HSDS3::OrganizationIdentifier>() { return organization_identifier_; }
-template<> Unit<HSDS3::Phone>& Application::unit<HSDS3::Phone>() { return phone_; }
-template<> Unit<HSDS3::Program>& Application::unit<HSDS3::Program>() { return program_; }
-template<> Unit<HSDS3::RequiredDocument>& Application::unit<HSDS3::RequiredDocument>() { return required_document_; }
-template<> Unit<HSDS3::Schedule>& Application::unit<HSDS3::Schedule>() { return schedule_; }
-template<> Unit<HSDS3::Service>& Application::unit<HSDS3::Service>() { return service_; }
-template<> Unit<HSDS3::ServiceArea>& Application::unit<HSDS3::ServiceArea>() { return service_area_; }
-template<> Unit<HSDS3::ServiceAtLocation>& Application::unit<HSDS3::ServiceAtLocation>() { return service_at_location_; }
-template<> Unit<HSDS3::Taxonomy>& Application::unit<HSDS3::Taxonomy>() { return taxonomy_; }
-template<> Unit<HSDS3::TaxonomyTerm>& Application::unit<HSDS3::TaxonomyTerm>() { return taxonomy_term_; }
-
 // template <>
 // DDS::ReturnCode_t Application::insert_and_write<HSDS2::CompleteService>(const HSDS2::CompleteService& element)
 // {

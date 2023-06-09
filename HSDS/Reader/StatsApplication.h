@@ -5,30 +5,26 @@
 
 class StatsApplication {
 public:
-  StatsApplication(const Application& application)
-    : organization_stats_(application)
-    , location_stats_(application)
-    , service_stats_(application)
+  StatsApplication(Application& application, size_t stats_cap)
+    : organization_stats_(application, stats_cap)
+    , location_stats_(application, stats_cap)
+    , service_stats_(application, stats_cap)
+    , application_(application)
   {}
 
   void run();
 
   template <typename T>
-  const Stats<T>& get_stats() const;
+  Stats<T>& get_stats();
 
 private:
-  void collect_datapoint();
+  void collect_datapoints();
 
   Stats<HSDS3::Organization> organization_stats_;
   Stats<HSDS3::Location> location_stats_;
   Stats<HSDS3::Service> service_stats_;
-};
 
-template<> const Stats<HSDS3::Organization>& StatsApplication::get_stats<HSDS3::Organization>() const
-{ return organization_stats_; }
-template<> const Stats<HSDS3::Location>& StatsApplication::get_stats<HSDS3::Location>() const
-{ return location_stats_; }
-template<> const Stats<HSDS3::Service>& StatsApplication::gte_stats<HSDS3::Service>() const
-{ return service_stats_; }
+  Application& application_;
+};
 
 #endif // HSDS_READER_STATS_APPLICATION_H

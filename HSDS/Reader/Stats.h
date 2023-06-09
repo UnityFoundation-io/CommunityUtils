@@ -5,8 +5,10 @@
 
 #include <dds/DCPS/TimeTypes.h>
 
+#include <vector>
+
 struct DataPoint {
-  DCPS::SystemTimePoint timestamp;
+  OpenDDS::DCPS::SystemTimePoint timestamp;
   size_t record_count;
   long writer_count;
 };
@@ -14,32 +16,34 @@ struct DataPoint {
 template <typename T>
 class Stats {
 public:
-  Stats(const Application& application) : application_(application) {}
+  Stats(Application& application, size_t capacity)
+    : application_(application)
+    , capacity_(capacity) {}
 
   // Return all records in a duration from now.
-  vector<DataPoint> query(DCPS::TimeDuration duration)
+  std::vector<DataPoint> query(OpenDDS::DCPS::TimeDuration duration)
   {
-    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, stats_mutex_, vector<DataPoint>());
-    const DCPS::SystemTimePoint now = DCPS::SystemTimePoint::now();
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, stats_mutex_, std::vector<DataPoint>());
+    const OpenDDS::DCPS::SystemTimePoint now = OpenDDS::DCPS::SystemTimePoint::now();
     if (now.value() <= duration.value()) {
-      return stats_;
+      return convert_to_vector();
     }
 
-    vector<DataPoint> result;
-    const DCPS::SystemTimePoint start_timepoint = now - duration;
-    for (const_iterator it = stats_.rbegin(); it != stats_.rend(); ++it) {
-      if (it->timestamp < start_timepoint) {
+    std::vector<DataPoint> result;
+    const OpenDDS::DCPS::SystemTimePoint start_timepoint = now - duration;
+    for (StatsContainer::const_reverse_iterator it = stats_.rbegin(); it != stats_.rend(); ++it) {
+      if (it->first < start_timepoint) {
         break;
       }
-      result.insert(result.begin(), *it);
+      result.insert(result.begin(), it->second);
     }
     return result;
   }
 
-  vector<DataPoint> query()
+  std::vector<DataPoint> query()
   {
-    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, stats_mutex_, vector<DataPoint>());
-    return stats_;
+    ACE_GUARD_RETURN(ACE_Thread_Mutex, g, stats_mutex_, std::vector<DataPoint>());
+    return convert_to_vector();
   }
 
   void collect_datapoint()
@@ -47,7 +51,7 @@ public:
     DataPoint dp;
     {
       ACE_GUARD(ACE_Thread_Mutex, g, application_.get_mutex());
-      dp.timestamp = DCPS::SystemTimePoint::now();
+      dp.timestamp = OpenDDS::DCPS::SystemTimePoint::now();
       const Unit<T>& unit = application_.unit<T>();
       dp.record_count = unit.container.size();
 
@@ -61,16 +65,32 @@ public:
     }
 
     ACE_GUARD(ACE_Thread_Mutex, g, stats_mutex_);
-    stats_.push_back(dp);
+    stats_.insert(std::make_pair(dp.timestamp, dp));
+    if (stats_.size() > capacity_) {
+      // Delete the oldest entry.
+      stats_.erase(stats_.begin());
+    }
   }
 
 private:
-  Application application_;
+  std::vector<DataPoint> convert_to_vector()
+  {
+    std::vector<DataPoint> result(stats_.size());
+    size_t i = 0;
+    for (StatsContainer::const_iterator it = stats_.begin(); it != stats_.end(); ++it) {
+      result[i++] = it->second;
+    }
+    return result;
+  }
+
+  Application& application_;
   ACE_Thread_Mutex stats_mutex_;
 
-  // TODO(sonndinh): Limit the maximum number of stored data points.
-  // Use map with keys are timestamps?
-  vector<DataPoint> stats_;
+  // Maximum number of entries for statistics.
+  const size_t capacity_;
+
+  typedef std::map<OpenDDS::DCPS::SystemTimePoint, DataPoint> StatsContainer;
+  StatsContainer stats_;
 };
 
 #endif // HSDS_READER_STATS_H

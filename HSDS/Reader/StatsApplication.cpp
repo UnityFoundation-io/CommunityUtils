@@ -1,4 +1,7 @@
 #include "StatsApplication.h"
+#include "Common.h"
+
+#include <dds/DCPS/WaitSet.h>
 
 // Entry point for collecting all stats data.
 void StatsApplication::run()
@@ -33,3 +36,12 @@ void StatsApplication::collect_datapoints()
   location_stats_.collect_datapoint();
   service_stats_.collect_datapoint();
 }
+
+template<> Stats<HSDS3::Organization>& StatsApplication::get_stats<HSDS3::Organization>()
+{ return organization_stats_; }
+
+template<> Stats<HSDS3::Location>& StatsApplication::get_stats<HSDS3::Location>()
+{ return location_stats_; }
+
+template<> Stats<HSDS3::Service>& StatsApplication::get_stats<HSDS3::Service>()
+{ return service_stats_; }
