@@ -19,6 +19,8 @@ public:
 
   const Application& application() const { return application_; }
 
+  Application& application() { return application_; }
+
 private:
   void collect_datapoints();
 

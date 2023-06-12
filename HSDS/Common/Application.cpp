@@ -692,3 +692,42 @@ template<> Unit<HSDS3::ServiceArea>& Application::unit<HSDS3::ServiceArea>() { r
 template<> Unit<HSDS3::ServiceAtLocation>& Application::unit<HSDS3::ServiceAtLocation>() { return service_at_location_; }
 template<> Unit<HSDS3::Taxonomy>& Application::unit<HSDS3::Taxonomy>() { return taxonomy_; }
 template<> Unit<HSDS3::TaxonomyTerm>& Application::unit<HSDS3::TaxonomyTerm>() { return taxonomy_term_; }
+
+template <>
+DDS::DataReader_var Application::reader<DDS::ParticipantBuiltinTopicData>() const
+{
+  DDS::Subscriber_var bit_subscriber = participant_->get_builtin_subscriber();
+  return bit_subscriber->lookup_datareader(OpenDDS::DCPS::BUILT_IN_PARTICIPANT_TOPIC);
+}
+
+template <>
+DDS::DataReader_var Application::reader<DDS::PublicationBuiltinTopicData>() const
+{
+  DDS::Subscriber_var bit_subscriber = participant_->get_builtin_subscriber();
+  return bit_subscriber->lookup_datareader(OpenDDS::DCPS::BUILT_IN_PUBLICATION_TOPIC);
+}
+
+template <>
+DDS::DataReader_var Application::reader<DDS::SubscriptionBuiltinTopicData>() const
+{
+  DDS::Subscriber_var bit_subscriber = participant_->get_builtin_subscriber();
+  return bit_subscriber->lookup_datareader(OpenDDS::DCPS::BUILT_IN_SUBSCRIPTION_TOPIC);
+}
+
+template <>
+void Application::set_count<DDS::ParticipantBuiltinTopicData>(size_t count)
+{
+  participant_count_ = count;
+}
+
+template <>
+void Application::set_count<DDS::PublicationBuiltinTopicData>(size_t count)
+{
+  publication_count_ = count;
+}
+
+template <>
+void Application::set_count<DDS::SubscriptionBuiltinTopicData>(size_t count)
+{
+  subscription_count_ = count;
+}

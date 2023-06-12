@@ -46,12 +46,12 @@ public:
     return convert_to_vector();
   }
 
-  void collect_datapoint()
+  void collect_datapoint(const OpenDDS::DCPS::SystemTimePoint& now)
   {
     DataPoint dp;
     {
       ACE_GUARD(ACE_Thread_Mutex, g, application_.get_mutex());
-      dp.timestamp = OpenDDS::DCPS::SystemTimePoint::now();
+      dp.timestamp = now;
       const Unit<T>& unit = application_.unit<T>();
       dp.record_count = unit.container.size();
 
