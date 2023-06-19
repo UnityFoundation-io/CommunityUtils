@@ -75,7 +75,7 @@ jobs:
         run: |
           cd OpenDDS/ACE_wrappers
           find . -iname "*\.o" | xargs rm
-          tar cvf ../../${{ github.job }}_ACE_wrappers.tar ACE/ace/config.h ACE/bin/MakeProjectCreator/config/default.features
+          tar cvf ../../${{ github.job }}_ACE_wrappers.tar ace/config.h bin/MakeProjectCreator/config/default.features
           git clean -xdfn | cut -d ' ' -f 3- | xargs tar uvf ../../${{ github.job }}_ACE_wrappers.tar
           xz -3 ../../${{ github.job }}_ACE_wrappers.tar
           cd ..
