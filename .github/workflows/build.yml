@@ -46,6 +46,9 @@ jobs:
           path: |
             ${{ github.job }}_ACE_wrappers.tar.xz
             ${{ github.job }}_OpenDDS.tar.xz
+      - name: install xerces
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
+        run: sudo apt-get -y install libxerces-c-dev
       - name: configure OpenDDS
         if: steps.cache-artifact.outputs.cache-hit != 'true'
         shell: bash
@@ -96,6 +99,9 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_OpenDDS
     steps:
+    - name: install xerces
+      if: steps.cache-artifact.outputs.cache-hit != 'true'
+      run: sudo apt-get -y install libxerces-c-dev
     - name: install libmicrohttpd-dev
       run: |
         sudo apt-get update -y
