@@ -118,7 +118,7 @@ jobs:
         cd build
         cmake .. -DBUILD_SHARED_LIBS=SHARED
         make
-        make install
+        sudo make install
     - name: checkout libhttpserver
       uses: actions/checkout@v3
       with:
@@ -133,7 +133,7 @@ jobs:
         cd build
         ../configure
         make
-        make install
+        sudo make install
     - name: checkout OpenDDS
       uses: actions/checkout@v3
       with:
