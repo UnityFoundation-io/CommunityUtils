@@ -44,7 +44,7 @@ jobs:
         with:
           key: c00_${{ github.job }}_OpenDDS_${{ env.OPENDDS_COMMIT }}
           path: |
-            ${{ github.job }}_ACE_wrappers.tar.xz
+            ${{ github.job }}_ACE_TAO.tar.xz
             ${{ github.job }}_OpenDDS.tar.xz
       - name: install xerces
         if: steps.cache-artifact.outputs.cache-hit != 'true'
@@ -54,7 +54,7 @@ jobs:
         shell: bash
         run: |
           cd OpenDDS
-          ./configure --std=c++11 --security
+          ./configure --ace-github-latest --std=c++11 --security
       - name: check build configuration
         if: steps.cache-artifact.outputs.cache-hit != 'true'
         shell: bash
@@ -73,22 +73,28 @@ jobs:
         if: steps.cache-artifact.outputs.cache-hit != 'true'
         shell: bash
         run: |
-          cd OpenDDS/ACE_wrappers
+          cd OpenDDS/ACE_TAO
           find . -iname "*\.o" | xargs rm
-          tar cvf ../../${{ github.job }}_ACE_wrappers.tar ace/config.h bin/MakeProjectCreator/config/default.features
-          git clean -xdfn | cut -d ' ' -f 3- | xargs tar uvf ../../${{ github.job }}_ACE_wrappers.tar
-          xz -3 ../../${{ github.job }}_ACE_wrappers.tar
+          tar cvf ../../${{ github.job }}_ACE_TAO.tar ACE/ace/config.h ACE/bin/MakeProjectCreator/config/default.features
+          echo "Running git clean on OpenDDS/ACE_TAO"
+          git clean -xdfn | cut -d ' ' -f 3-
+          echo
+          git clean -xdfn | cut -d ' ' -f 3- | xargs tar uvf ../../${{ github.job }}_ACE_TAO.tar
+          xz -3 ../../${{ github.job }}_ACE_TAO.tar
           cd ..
-          rm -rf ACE_wrappers
+          rm -rf ACE_TAO
           find . -iname "*\.o" | xargs rm
           tar cvf ../${{ github.job }}_OpenDDS.tar setenv.sh
+          echo "Running git clean on OpenDDS"
+          git clean -xdfn | cut -d ' ' -f 3-
+          echo
           git clean -xdfn | cut -d ' ' -f 3- | xargs tar uvf ../${{ github.job }}_OpenDDS.tar
           xz -3 ../${{ github.job }}_OpenDDS.tar
       - name: upload ACE_TAO artifact
         uses: actions/upload-artifact@v3
         with:
-          name: ${{ github.job }}_ACE_wrappers_artifact
-          path: ${{ github.job }}_ACE_wrappers.tar.xz
+          name: ${{ github.job }}_ACE_TAO_artifact
+          path: ${{ github.job }}_ACE_TAO.tar.xz
       - name: upload OpenDDS artifact
         uses: actions/upload-artifact@v3
         with:
@@ -145,17 +151,17 @@ jobs:
       shell: bash
       run: |
         cd OpenDDS
-        ./configure --std=c++11 --security
+        ./configure --ace-github-latest --std=c++11 --security
     - name: download ACE_TAO artifact
       uses: actions/download-artifact@v3
       with:
-        name: build_OpenDDS_ACE_wrappers_artifact
-        path: OpenDDS/ACE_wrappers
+        name: build_OpenDDS_ACE_TAO_artifact
+        path: OpenDDS/ACE_TAO
     - name: extract ACE_TAO artifact
       shell: bash
       run: |
-        cd OpenDDS/ACE_wrappers
-        tar xvfJ build_OpenDDS_ACE_wrappers.tar.xz
+        cd OpenDDS/ACE_TAO
+        tar xvfJ build_OpenDDS_ACE_TAO.tar.xz
     - name: download OpenDDS artifact
       uses: actions/download-artifact@v3
       with:
