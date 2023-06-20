@@ -100,11 +100,20 @@ jobs:
     runs-on: ubuntu-latest
     needs: build_OpenDDS
     steps:
-    - name: install xerces, libmicrohttpd-dev, libcurl4-openssl-dev
+    - name: install wget, xerces, libmicrohttpd-dev, libcurl4-openssl-dev
       shell: bash
       run: |
         sudo apt-get update -y
-        sudo apt-get install -y libxerces-c-dev libmicrohttpd-dev libcurl4-openssl-dev
+        sudo apt-get install -y wget libxerces-c-dev libmicrohttpd-dev libcurl4-openssl-dev
+    - name: install libcurl
+      shell: bash
+      run: |
+        wget https://github.com/curl/curl/releases/download/curl-7_87_0/curl-7.87.0.tar.gz
+        tar xzf curl-7.87.0.tar.gz
+        cd curl-7.87.0
+        ./configure --with-openssl
+        make
+        sudo make install
     - name: checkout libcurlcpp
       uses: actions/checkout@v3
       with:
