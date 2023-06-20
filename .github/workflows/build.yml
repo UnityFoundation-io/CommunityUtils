@@ -194,4 +194,7 @@ jobs:
         export COMMUNITY_UTILS_ROOT=$GITHUB_WORKSPACE/CommunityUtils
         cd CommunityUtils
         mwc.pl -type gnuace HSDS.mwc -include MPC/config
+        echo "======== GNUmakefile.HSDSCommon:"
+        cat HSDS/Common/GNUmakefile.HSDSCommon
+        echo "========"
         make
