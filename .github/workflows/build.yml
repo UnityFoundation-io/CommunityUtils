@@ -27,10 +27,6 @@ jobs:
   build_OpenDDS:
     runs-on: ubuntu-latest
     steps:
-      - name: check gcc version
-        shell: bash
-        run: |
-          g++ --version
       - name: checkout OpenDDS
         uses: actions/checkout@v3
         with:
@@ -114,6 +110,7 @@ jobs:
       with:
         repository: JosephP91/curlcpp
         path: curlcpp
+        ref: 3.1
     - name: install libcurlcpp
       shell: bash
       run: |
@@ -128,6 +125,7 @@ jobs:
       with:
         repository: etr/libhttpserver
         path: libhttpserver
+        ref: 0.18.2
     - name: install libhttpserver
       shell: bash
       run: |
