@@ -37,7 +37,7 @@ jobs:
         with:
           repository: OpenDDS/OpenDDS
           path: OpenDDS
-          ref: master
+          ref: DDS-3.24.1
       - name: get OpenDDS commit
         shell: bash
         run: |
