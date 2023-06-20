@@ -155,7 +155,7 @@ jobs:
       with:
         repository: OpenDDS/OpenDDS
         path: OpenDDS
-        ref: master
+        ref: DDS-3.24.1
     - name: configure OpenDDS
       shell: bash
       run: |
@@ -194,7 +194,10 @@ jobs:
         export COMMUNITY_UTILS_ROOT=$GITHUB_WORKSPACE/CommunityUtils
         cd CommunityUtils
         mwc.pl -type gnuace HSDS.mwc -include MPC/config
-        echo "======== GNUmakefile.HSDSCommon:"
-        cat HSDS/Common/GNUmakefile.HSDSCommon
-        echo "========"
+        echo "========== ls HSDS/Common/.shobj"
+        ls -a HSDS/Common/.shobj
+        echo "=========="
+        echo "========== ls HSDS/JsonWriter/.obj"
+        ls -a HSDS/JsonWriter/.obj
+        echo "=========="
         make
