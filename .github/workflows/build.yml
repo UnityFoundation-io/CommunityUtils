@@ -31,10 +31,6 @@ jobs:
         shell: bash
         run: |
           g++ --version
-          echo "======= ls /usr/bin"
-          ls /usr/bin
-          echo "======= ls /usr/local/bin"
-          ls /usr/local/bin
       - name: checkout OpenDDS
         uses: actions/checkout@v3
         with:
@@ -63,7 +59,7 @@ jobs:
         shell: bash
         run: |
           cd OpenDDS
-          ./configure --ace-github-latest --std=c++11 --security
+          ./configure --ace-github-latest --security
       - name: check build configuration
         if: steps.cache-artifact.outputs.cache-hit != 'true'
         shell: bash
@@ -152,7 +148,7 @@ jobs:
       shell: bash
       run: |
         cd OpenDDS
-        ./configure --ace-github-latest --std=c++11 --security
+        ./configure --ace-github-latest --security
     - name: download ACE_TAO artifact
       uses: actions/download-artifact@v3
       with:
