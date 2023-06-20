@@ -27,6 +27,11 @@ jobs:
   build_OpenDDS:
     runs-on: ubuntu-latest
     steps:
+      - name: print env
+        shell: bash
+        run: |
+          echo $LD_LIBRARY_PATH
+          printenv
       - name: checkout OpenDDS
         uses: actions/checkout@v3
         with:
