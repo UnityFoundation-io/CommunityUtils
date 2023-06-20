@@ -27,6 +27,14 @@ jobs:
   build_OpenDDS:
     runs-on: ubuntu-latest
     steps:
+      - name: check gcc version
+        shell: bash
+        run: |
+          g++ --version
+          echo "======= ls /usr/bin"
+          ls /usr/bin
+          echo "======= ls /usr/local/bin"
+          ls /usr/local/bin
       - name: checkout OpenDDS
         uses: actions/checkout@v3
         with:
