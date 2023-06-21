@@ -27,11 +27,6 @@ jobs:
   build_OpenDDS:
     runs-on: ubuntu-latest
     steps:
-      - name: print env
-        shell: bash
-        run: |
-          echo $LD_LIBRARY_PATH
-          printenv
       - name: checkout OpenDDS
         uses: actions/checkout@v3
         with:
@@ -192,7 +187,6 @@ jobs:
       run: |
         source OpenDDS/setenv.sh
         export COMMUNITY_UTILS_ROOT=$GITHUB_WORKSPACE/CommunityUtils
-        #export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
         cd CommunityUtils
         mwc.pl -type gnuace HSDS.mwc -include MPC/config
         make
