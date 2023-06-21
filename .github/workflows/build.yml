@@ -192,12 +192,7 @@ jobs:
       run: |
         source OpenDDS/setenv.sh
         export COMMUNITY_UTILS_ROOT=$GITHUB_WORKSPACE/CommunityUtils
+        export LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib
         cd CommunityUtils
         mwc.pl -type gnuace HSDS.mwc -include MPC/config
-        #echo "========== ls HSDS/Common/.shobj"
-        #ls -a HSDS/Common/.shobj
-        #echo "=========="
-        #echo "========== ls HSDS/JsonWriter/.obj"
-        #ls -a HSDS/JsonWriter/.obj
-        #echo "=========="
         make
