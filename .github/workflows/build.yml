@@ -1,0 +1,192 @@
+name: Build CommunityUtils
+on:
+  pull_request:
+    branches:
+      - main
+      - stats-main
+    paths:
+      - '**'
+      - '!Dockerfile'
+      - '!READER*'
+      - '!LICENSE'
+  push:
+    branches:
+      - main
+      - stats-main
+    paths:
+      - '**'
+      - '!Dockerfile'
+      - '!READER*'
+      - '!LICENSE'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build_OpenDDS:
+    runs-on: ubuntu-latest
+    steps:
+      - name: checkout OpenDDS
+        uses: actions/checkout@v3
+        with:
+          repository: OpenDDS/OpenDDS
+          path: OpenDDS
+          ref: master
+      - name: get OpenDDS commit
+        shell: bash
+        run: |
+          cd OpenDDS
+          echo OPENDDS_COMMIT=$(git rev-parse HEAD) >> $GITHUB_ENV
+      - name: cache OpenDDS and ACE_TAO
+        id: cache-artifact
+        uses: actions/cache@v3
+        with:
+          key: c00_${{ github.job }}_OpenDDS_${{ env.OPENDDS_COMMIT }}
+          path: |
+            ${{ github.job }}_ACE_TAO.tar.xz
+            ${{ github.job }}_OpenDDS.tar.xz
+      - name: install xerces
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
+        shell: bash
+        run: sudo apt-get install -y libxerces-c-dev
+      - name: configure OpenDDS
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd OpenDDS
+          ./configure --ace-github-latest --security
+      - name: check build configuration
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd OpenDDS
+          source setenv.sh
+          tools/scripts/show_build_config.pl
+      - name: build OpenDDS
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd OpenDDS
+          . setenv.sh
+          make -j4
+      - name: create OpenDDS and ACE_TAO artifact
+        if: steps.cache-artifact.outputs.cache-hit != 'true'
+        shell: bash
+        run: |
+          cd OpenDDS/ACE_TAO
+          find . -iname "*\.o" | xargs rm
+          tar cvf ../../${{ github.job }}_ACE_TAO.tar ACE/ace/config.h ACE/bin/MakeProjectCreator/config/default.features
+          git clean -xdfn | cut -d ' ' -f 3- | xargs tar uvf ../../${{ github.job }}_ACE_TAO.tar
+          xz -3 ../../${{ github.job }}_ACE_TAO.tar
+          cd ..
+          rm -rf ACE_TAO
+          find . -iname "*\.o" | xargs rm
+          tar cvf ../${{ github.job }}_OpenDDS.tar setenv.sh
+          git clean -xdfn | cut -d ' ' -f 3- | xargs tar uvf ../${{ github.job }}_OpenDDS.tar
+          xz -3 ../${{ github.job }}_OpenDDS.tar
+      - name: upload ACE_TAO artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.job }}_ACE_TAO_artifact
+          path: ${{ github.job }}_ACE_TAO.tar.xz
+      - name: upload OpenDDS artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: ${{ github.job }}_OpenDDS_artifact
+          path: ${{ github.job }}_OpenDDS.tar.xz
+
+  build_CommunityUtils:
+    runs-on: ubuntu-latest
+    needs: build_OpenDDS
+    steps:
+    - name: install wget, xerces, libmicrohttpd-dev
+      shell: bash
+      run: |
+        sudo apt-get update -y
+        sudo apt-get install -y wget libxerces-c-dev libmicrohttpd-dev
+    - name: install libcurl
+      shell: bash
+      run: |
+        wget https://github.com/curl/curl/releases/download/curl-7_87_0/curl-7.87.0.tar.gz
+        tar xzf curl-7.87.0.tar.gz
+        cd curl-7.87.0
+        ./configure --with-openssl
+        make
+        sudo make install
+    - name: checkout libcurlcpp
+      uses: actions/checkout@v3
+      with:
+        repository: JosephP91/curlcpp
+        path: curlcpp
+        ref: 3.1
+    - name: install libcurlcpp
+      shell: bash
+      run: |
+        cd curlcpp
+        mkdir build
+        cd build
+        cmake .. -DBUILD_SHARED_LIBS=SHARED
+        make
+        sudo make install
+    - name: checkout libhttpserver
+      uses: actions/checkout@v3
+      with:
+        repository: etr/libhttpserver
+        path: libhttpserver
+        ref: 0.18.2
+    - name: install libhttpserver
+      shell: bash
+      run: |
+        cd libhttpserver
+        ./bootstrap
+        mkdir build
+        cd build
+        ../configure
+        make
+        sudo make install
+    - name: checkout OpenDDS
+      uses: actions/checkout@v3
+      with:
+        repository: OpenDDS/OpenDDS
+        path: OpenDDS
+        ref: master
+    - name: configure OpenDDS
+      shell: bash
+      run: |
+        cd OpenDDS
+        ./configure --ace-github-latest --security
+    - name: download ACE_TAO artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: build_OpenDDS_ACE_TAO_artifact
+        path: OpenDDS/ACE_TAO
+    - name: extract ACE_TAO artifact
+      shell: bash
+      run: |
+        cd OpenDDS/ACE_TAO
+        tar xvfJ build_OpenDDS_ACE_TAO.tar.xz
+    - name: download OpenDDS artifact
+      uses: actions/download-artifact@v3
+      with:
+        name: build_OpenDDS_OpenDDS_artifact
+        path: OpenDDS
+    - name: extract OpenDDS artifact
+      shell: bash
+      run: |
+        cd OpenDDS
+        tar xvfJ build_OpenDDS_OpenDDS.tar.xz
+    - name: checkout CommunityUtils
+      uses: actions/checkout@v3
+      with:
+        repository: UnityFoundation-io/CommunityUtils
+        path: CommunityUtils
+        ref: main
+    - name: build CommunityUtils
+      shell: bash
+      run: |
+        source OpenDDS/setenv.sh
+        export COMMUNITY_UTILS_ROOT=$GITHUB_WORKSPACE/CommunityUtils
+        cd CommunityUtils
+        mwc.pl -type gnuace HSDS.mwc -include MPC/config
+        make
