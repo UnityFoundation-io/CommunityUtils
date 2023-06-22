@@ -5,3 +5,5 @@
 GNUmakefile*
 *.dylib
 .obj*
+lib*.so*
+*.jar
