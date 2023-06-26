@@ -11,7 +11,7 @@ void load_and_write(Application& application)
 {
   const Unit<T> unit = application.unit<T>();
   const std::string path = application.data_path() + '/' + unit.json_file;
-  ACE_DEBUG((LM_INFO, "Opening %C\n", path.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: load_and_write: Opening %C\n", path.c_str()));
   FILE* fp = fopen(path.c_str(), "r");
   if (fp != NULL) {
     char buffer[65536];
@@ -19,44 +19,44 @@ void load_and_write(Application& application)
 
     OpenDDS::DCPS::JsonValueReader<rapidjson::FileReadStream> jvr(is);
     if (!jvr.begin_sequence()) {
-      ACE_DEBUG((LM_INFO, "Could not read1 %C\n", path.c_str()));
+      ACE_DEBUG((LM_INFO, "INFO: load_and_write: begin_sequence failed (path=%C)\n", path.c_str()));
       fclose(fp);
       return;
     }
     while (jvr.elements_remaining()) {
       if (!jvr.begin_element()) {
-        ACE_DEBUG((LM_INFO, "Could not read2 %C\n", path.c_str()));
+        ACE_DEBUG((LM_INFO, "INFO: load_and_write: begin_element failed (path=%C)\n", path.c_str()));
         fclose(fp);
         return;
       }
       T element;
       OpenDDS::DCPS::set_default(element);
       if (!vread(jvr, element)) {
-        ACE_DEBUG((LM_INFO, "Could not read3 %C\n", path.c_str()));
+        ACE_DEBUG((LM_INFO, "INFO: load_and_write: vread failed (path=%C)\n", path.c_str()));
         fclose(fp);
         return;
       }
       element.dpmgid(application.dpm_gid());
       if (application.insert_and_write(element) != DDS::RETCODE_OK) {
-        ACE_ERROR((LM_ERROR, "Could not write\n"));
+        ACE_ERROR((LM_ERROR, "ERROR: load_and_write: Could not write\n"));
       }
       // TODO: Check element.
       // Save.
       if (!jvr.end_element()) {
-        ACE_DEBUG((LM_INFO, "Could not read4 %C\n", path.c_str()));
+        ACE_DEBUG((LM_INFO, "INFO: load_and_write: end_element failed (path=%C)\n", path.c_str()));
         fclose(fp);
         return;
       }
     }
     if (!jvr.end_sequence()) {
-      ACE_DEBUG((LM_INFO, "Could not read5 %C\n", path.c_str()));
+      ACE_DEBUG((LM_INFO, "INFO: load_and_write: end_sequence failed (path=%C)\n", path.c_str()));
       fclose(fp);
       return;
     }
 
     fclose(fp);
   } else {
-    ACE_DEBUG((LM_INFO, "Could not open %C\n", path.c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: load_and_write: Could not open %C\n", path.c_str()));
   }
 }
 

@@ -49,9 +49,14 @@ void sync(Application& application, curl_easy& easy)
   easy.add<CURLOPT_READDATA>(input.get_stream());
 
   application.increment_transaction();
-  easy.perform();
-  // TODO: Error handling.
-  // TODO: Handle output.
+
+  try {
+    easy.perform();
+    // TODO: Handle output.
+  } catch (curl_easy_exception& error) {
+    ACE_ERROR((LM_ERROR, "ERROR: sync failed: %C\n", error.what()));
+    error.print_traceback();
+  }
 }
 
 void synchronize(Application& application, curl_easy& easy)
@@ -164,10 +169,8 @@ public:
             synchronize(application_, easy);
             // TODO: Handle output.
           } catch (curl_easy_exception& error) {
-            // TODO: Error handling.
-            // If you want to get the entire error stack we can do:
-            curlcpp_traceback errors = error.get_traceback();
-            // Otherwise we could print the stack like this:
+            ACE_ERROR((LM_ERROR, "ERROR: Listener::on_data_available: failed DELETE for sample %u: %C\d",
+                       idx, error.what()));
             error.print_traceback();
           }
         } else if (info.valid_data) {
@@ -191,10 +194,8 @@ public:
             synchronize(application_, easy);
             // TODO: Handle output.
           } catch (curl_easy_exception& error) {
-            // TODO: Error handling.
-            // If you want to get the entire error stack we can do:
-            curlcpp_traceback errors = error.get_traceback();
-            // Otherwise we could print the stack like this:
+            ACE_ERROR((LM_ERROR, "ERROR: Listener::on_data_available: failed PUT for sample %u: %C\n",
+                       idx, error.what()));
             error.print_traceback();
           }
         }
@@ -316,10 +317,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
           synchronize(application, easy);
           // TODO: Handle output.
         } catch (curl_easy_exception& error) {
-          // TODO: Error handling.
-          // If you want to get the entire error stack we can do:
-          curlcpp_traceback errors = error.get_traceback();
-          // Otherwise we could print the stack like this:
+          ACE_ERROR((LM_ERROR, "ERROR: curl operation failed: %C\n", error.what()));
           error.print_traceback();
         }
       }

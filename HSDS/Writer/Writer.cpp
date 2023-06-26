@@ -469,6 +469,11 @@
 //   }
 // };
 
+void log_access_fn(const std::string& url)
+{
+  ACE_DEBUG((LM_INFO, "ACCESSING: %C\n", url.c_str()));
+}
+
 int
 ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 {
@@ -507,8 +512,7 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     }
   }
 
-  // TODO: Request/response logging.
-  httpserver::webserver webserver = httpserver::create_webserver(application.http_port());
+  httpserver::webserver webserver = httpserver::create_webserver(application.http_port()).log_access(log_access_fn);
 
   // Create /hsds endpoints.
   HsdsResource<HSDS3::Service> service_hsds_resource(application, webserver);
