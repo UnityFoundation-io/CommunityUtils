@@ -172,11 +172,7 @@ protected:
   bool check_input(ErrorResponse& err,
                    const HSDS3::Attribute& value) const
   {
-    if (!check_common(err, value)) {
-      return false;
-    }
-
-    return true;
+    return check_common(err, value);
   }
 
   bool check_input(ErrorResponse& err,
