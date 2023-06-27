@@ -11,6 +11,7 @@ It may be useful to create a wrapper script that defines these variables.
 * `DPM_PASSWORD` - the password of the application in the DPM
 * `DPM_NONCE` - an alphanumeric string that distinguishes this instance of JsonWriter
 * `HTTP_PORT` - the listening port of the HTTP API (default 8080)
+* `ENABLE_HTTP_LOG_ACCESS` - when 1, log HTTP API activity, default 1
 * `ACCESS_CONTROL_ALLOW_ORIGIN` - the content of the Access-Control-Allow-Origin HTTP header if not empty
 * `CREATE_WRITERS` - 0 or 1 indicating that writers should be created and used (default 1)
 

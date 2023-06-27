@@ -43,7 +43,15 @@ Specifically, a JsonWriter or Writer must be able to write to all of the HSDS to
 ## General Configuration
 
 Configuration options common to all of the utilities can be added to the `setenv.sh` in the previous section.
-This includes the names of the topics, the URL of the DPM, the DPM group id for all of the applications, and the URL of the RtpsRelay.
+This includes
+
+* the names of the topics
+* `DPM_URL` - the URL of the DPM
+* `DPM_GID` - the DPM group id for all of the applications
+* `RELAY_CONFIG_URL` - the URL of the RtpsRelay
+* `RTPS_RELAY_ONLY` - when 1, force all RTPS traffic to the RtpsRelay, default 1
+* `ENABLE_OBSERVER` - when 1, log DCPS activity, default 1
+
 If the DPM applications are not in the same DPM group, then the DPM group id can be omitted and set for each application.
 Example:
 
