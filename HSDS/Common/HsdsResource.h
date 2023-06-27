@@ -30,10 +30,12 @@ public:
     const std::string id = request.get_arg("id");
 
     if (dpmgid.empty()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_PUT: dpmgid is missing from URL!\n"));
       return this->respond(ErrorResponse::make_bad_request("dpmgid is required"));
     }
 
     if (id.empty()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_PUT: id is missing from URL!\n"));
       return this->respond(ErrorResponse::make_bad_request("id is required"));
     }
 
@@ -41,19 +43,23 @@ public:
     rapidjson::StringStream ss(request.get_content().c_str());
     T element;
     if (!OpenDDS::DCPS::from_json(element, ss)) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_PUT: failed to parse input json!!\n"));
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
 
     ErrorResponse err;
     if (!this->check_input(err, element)) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_PUT: check_input failed!\n"));
       return this->respond(err);
     }
 
     // Compare ids.
     if (dpmgid != element.dpmgid()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_PUT: dpmgid from URL and body disagree!\n"));
       return this->respond(ErrorResponse::make_bad_request("dpmgid from URL and body disagree"));
     }
     if (id != element.id()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_PUT: id from URL and body disagree!\n"));
       return this->respond(ErrorResponse::make_bad_request("id from URL and body disagree"));
     }
 
@@ -73,10 +79,12 @@ public:
     const std::string id = request.get_arg("id");
 
     if (dpmgid.empty()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_GET: dpmgid is missing from URL!\n"));
       return this->respond(ErrorResponse::make_bad_request("dpmgid is required"));
     }
 
     if (id.empty()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_GET: id is missing from URL!\n"));
       return this->respond(ErrorResponse::make_bad_request("id is required"));
     }
 
@@ -84,6 +92,8 @@ public:
                      this->respond(ErrorResponse::make_internal_server_error()));
     typename UnitResourceBase<T>::ContainerType::const_iterator pos = this->unit_.container.find(std::make_pair(dpmgid, id));
     if (pos == this->unit_.container.end()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_GET: Resource for (dpmgid:%C, id:%C) not found!\n",
+                 dpmgid.c_str(), id.c_str()));
       return this->respond(ErrorResponse::make_not_found());
     }
 
@@ -96,10 +106,12 @@ public:
     const std::string id = request.get_arg("id");
 
     if (dpmgid.empty()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_DELETE: dpmgid is missing from URL!\n"));
       return this->respond(ErrorResponse::make_bad_request("dpmgid is required"));
     }
 
     if (id.empty()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_DELETE: id is missing from URL!\n"));
       return this->respond(ErrorResponse::make_bad_request("id is required"));
     }
 
@@ -109,6 +121,8 @@ public:
                      this->respond(ErrorResponse::make_internal_server_error()));
     typename UnitResourceBase<T>::ContainerType::const_iterator pos = this->unit_.container.find(key);
     if (pos == this->unit_.container.end()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_DELETE: Resource for (dpmgid:%C, id:%C) not found!\n",
+                 dpmgid.c_str(), id.c_str()));
       return this->respond(ErrorResponse::make_not_found());
     }
 
@@ -144,28 +158,34 @@ public:
     rapidjson::StringStream ss(request.get_content().c_str());
     OpenDDS::DCPS::JsonValueReader<rapidjson::StringStream> jvr(ss);
     if (!jvr.begin_sequence()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_PUT: begin_sequence failed!\n"));
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
     while (jvr.elements_remaining()) {
       if (!jvr.begin_element()) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_PUT: begin_element failed!\n"));
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
       T element;
       OpenDDS::DCPS::set_default(element);
       if (!vread(jvr, element)) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_PUT: vread failed!\n"));
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
       ErrorResponse err;
       if (!this->check_input(err, element)) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_PUT: check_input failed!\n"));
         return this->respond(err);
       }
       // Save.
       new_container.insert(element);
       if (!jvr.end_element()) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_PUT: end_element failed!\n"));
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
     }
     if (!jvr.end_sequence()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_PUT: end_sequence failed!\n"));
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
 
@@ -183,7 +203,8 @@ public:
           // Deleted item.
           const DDS::ReturnCode_t retcode = this->unit_.writer->unregister_instance(this->unit_.container.at(pos_old->second), DDS::HANDLE_NIL);
           if (retcode != DDS::RETCODE_OK) {
-            ACE_ERROR((LM_ERROR, "ERROR: unregister_instance failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+            ACE_ERROR((LM_ERROR, "ERROR: HsdsCollectionResource::render_PUT: unregister_instance failed %C\n",
+                       OpenDDS::DCPS::retcode_to_string(retcode)));
             return this->respond(ErrorResponse::make_internal_server_error());
           }
           ++pos_old;
@@ -193,7 +214,8 @@ public:
           // New item.
           const DDS::ReturnCode_t retcode = this->unit_.writer->write(new_container.at(pos_new->second), DDS::HANDLE_NIL);
           if (retcode != DDS::RETCODE_OK) {
-            ACE_ERROR((LM_ERROR, "ERROR: write failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+            ACE_ERROR((LM_ERROR, "ERROR: HsdsCollectionResource::render_PUT: write failed %C\n",
+                       OpenDDS::DCPS::retcode_to_string(retcode)));
             return this->respond(ErrorResponse::make_internal_server_error());
           }
           ++pos_new;
@@ -208,7 +230,8 @@ public:
             // Changed item.
             const DDS::ReturnCode_t retcode = this->unit_.writer->write(n, DDS::HANDLE_NIL);
             if (retcode != DDS::RETCODE_OK) {
-              ACE_ERROR((LM_ERROR, "ERROR: write failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+              ACE_ERROR((LM_ERROR, "ERROR: HsdsCollectionResource::render_PUT: write failed %C\n",
+                         OpenDDS::DCPS::retcode_to_string(retcode)));
               return this->respond(ErrorResponse::make_internal_server_error());
             }
           }
@@ -221,7 +244,8 @@ public:
           // New item.
           const DDS::ReturnCode_t retcode = this->unit_.writer->write(new_container.at(pos_new->second), DDS::HANDLE_NIL);
           if (retcode != DDS::RETCODE_OK) {
-            ACE_ERROR((LM_ERROR, "ERROR: write failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+            ACE_ERROR((LM_ERROR, "ERROR: HsdsCollectionResource::render_PUT: write failed %C\n",
+                       OpenDDS::DCPS::retcode_to_string(retcode)));
             return this->respond(ErrorResponse::make_internal_server_error());
           }
           ++pos_new;
@@ -231,7 +255,8 @@ public:
         // Deleted item.
         const DDS::ReturnCode_t retcode = this->unit_.writer->unregister_instance(this->unit_.container.at(pos_old->second), DDS::HANDLE_NIL);
         if (retcode != DDS::RETCODE_OK) {
-          ACE_ERROR((LM_ERROR, "ERROR: unregister_instance failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+          ACE_ERROR((LM_ERROR, "ERROR: HsdsCollectionResource::render_PUT: unregister_instance failed %C\n",
+                     OpenDDS::DCPS::retcode_to_string(retcode)));
           return this->respond(ErrorResponse::make_internal_server_error());
         }
         ++pos_old;
@@ -253,27 +278,33 @@ public:
     rapidjson::StringStream ss(request.get_content().c_str());
     OpenDDS::DCPS::JsonValueReader<rapidjson::StringStream> jvr(ss);
     if (!jvr.begin_sequence()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_POST: begin_sequence failed!\n"));
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
     while (jvr.elements_remaining()) {
       if (!jvr.begin_element()) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_POST: begin_element failed!\n"));
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
       T element;
       OpenDDS::DCPS::set_default(element);
       if (!vread(jvr, element)) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_POST: vread failed!\n"));
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
       ErrorResponse err;
       if (!this->check_input(err, element)) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_POST: check_input failed!\n"));
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
       list.push_back(element);
       if (!jvr.end_element()) {
+        ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_POST: end_element failed!\n"));
         return this->respond(ErrorResponse::make_bad_request("input is malformed"));
       }
     }
     if (!jvr.end_sequence()) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_POST: end_sequence failed!\n"));
       return this->respond(ErrorResponse::make_bad_request("input is malformed"));
     }
 
@@ -339,7 +370,8 @@ public:
       for (const auto& e : this->unit_.container) {
         const DDS::ReturnCode_t retcode = this->unit_.writer->unregister_instance(e, DDS::HANDLE_NIL);
         if (retcode != DDS::RETCODE_OK) {
-          ACE_ERROR((LM_ERROR, "ERROR: unregister_instance failed %C\n", OpenDDS::DCPS::retcode_to_string(retcode)));
+          ACE_ERROR((LM_ERROR, "ERROR: HsdsCollectionResource::render_DELETE: unregister_instance failed %C\n",
+                     OpenDDS::DCPS::retcode_to_string(retcode)));
           return this->respond(ErrorResponse::make_internal_server_error());
         }
       }

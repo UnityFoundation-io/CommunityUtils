@@ -27,7 +27,8 @@ public:
     DDS::Topic_var topic = dw->get_topic();
     CORBA::String_var topic_name = topic->get_name();
     CORBA::String_var type_name = topic->get_type_name();
-    ACE_DEBUG((LM_INFO, "on_sample_sent topic=%C type=%C sample=%C\n", topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: Observer::on_sample_sent: topic=%C type=%C sample=%C\n",
+               topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
   }
 
   void on_sample_received(DDS::DataReader_ptr dr, const Sample& s)
@@ -35,7 +36,8 @@ public:
     DDS::TopicDescription_var topic = dr->get_topicdescription();
     CORBA::String_var topic_name = topic->get_name();
     CORBA::String_var type_name = topic->get_type_name();
-    ACE_DEBUG((LM_INFO, "on_sample_received topic=%C type=%C sample=%C\n", topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: Observer::on_sample_received: topic=%C type=%C sample=%C\n",
+               topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
   }
 
   void on_disposed(DDS::DataWriter_ptr dw, const Sample& s)
@@ -43,7 +45,8 @@ public:
     DDS::Topic_var topic = dw->get_topic();
     CORBA::String_var topic_name = topic->get_name();
     CORBA::String_var type_name = topic->get_type_name();
-    ACE_DEBUG((LM_INFO, "on_disposed topic=%C type=%C sample=%C\n", topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: Observer::on_disposed: (on writer) topic=%C type=%C sample=%C\n",
+               topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
   }
 
   void on_disposed(DDS::DataReader_ptr dr, const Sample& s)
@@ -51,7 +54,8 @@ public:
     DDS::TopicDescription_var topic = dr->get_topicdescription();
     CORBA::String_var topic_name = topic->get_name();
     CORBA::String_var type_name = topic->get_type_name();
-    ACE_DEBUG((LM_INFO, "on_disposed topic=%C type=%C sample=%C\n", topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: Observer::on_disposed: (on reader) topic=%C type=%C sample=%C\n",
+               topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
   }
 
   void on_unregistered(DDS::DataWriter_ptr dw, const Sample& s)
@@ -59,7 +63,8 @@ public:
     DDS::Topic_var topic = dw->get_topic();
     CORBA::String_var topic_name = topic->get_name();
     CORBA::String_var type_name = topic->get_type_name();
-    ACE_DEBUG((LM_INFO, "on_unregistered topic=%C type=%C sample=%C\n", topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: Observer::on_unregistered: (on writer) topic=%C type=%C sample=%C\n",
+               topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
   }
 
   void on_unregistered(DDS::DataReader_ptr dr, const Sample& s)
@@ -67,7 +72,8 @@ public:
     DDS::TopicDescription_var topic = dr->get_topicdescription();
     CORBA::String_var topic_name = topic->get_name();
     CORBA::String_var type_name = topic->get_type_name();
-    ACE_DEBUG((LM_INFO, "on_unregistered topic=%C type=%C sample=%C\n", topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: Observer::on_unregistered: (on reader) topic=%C type=%C sample=%C\n",
+               topic_name.in(), type_name.in(), OpenDDS::DCPS::to_json(s).c_str()));
   }
 };
 
@@ -85,8 +91,13 @@ namespace {
     easy.add<CURLOPT_WRITEFUNCTION>(stream_ios.get_function());
     easy.add<CURLOPT_WRITEDATA>(stream_ios.get_stream());
 
-    easy.perform();
-    // TODO: Check status and error handling.
+    try {
+      easy.perform();
+    } catch (curl_easy_exception& error) {
+      ACE_ERROR((LM_ERROR, "ERROR: download_security_document failed: %C\n", error.what()));
+      error.print_traceback();
+      return DDS::RETCODE_ERROR;
+    }
 
     target = stream.str();
     return DDS::RETCODE_OK;
@@ -185,13 +196,28 @@ Application::load_environment_variables()
   if (e) {
     access_control_allow_origin_ = e;
   }
+
+  e = getenv("RTPS_RELAY_ONLY");
+  if (e) {
+    rtps_relay_only_ = ACE_OS::atoi(e);
+  }
+
+  e = getenv("ENABLE_HTTP_LOG_ACCESS");
+  if (e) {
+    enable_http_log_access_ = ACE_OS::atoi(e);
+  }
+
+  e = getenv("ENABLE_OBSERVER");
+  if (e) {
+    enable_observer_ = ACE_OS::atoi(e);
+  }
 }
 
 struct LogTopicName {
   template <typename T>
   DDS::ReturnCode_t operator() (const Unit<T>& unit)
   {
-    ACE_DEBUG((LM_INFO, "%C=%C\n", unit.topic_name_key.c_str(), unit.topic_name.c_str()));
+    ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: %C=%C\n", unit.topic_name_key.c_str(), unit.topic_name.c_str()));
     return DDS::RETCODE_OK;
   }
 };
@@ -199,41 +225,45 @@ struct LogTopicName {
 void
 Application::dump_configuration() const
 {
-  ACE_DEBUG((LM_INFO, "DPM_URL=%C\n", dpm_url_.c_str()));
-  ACE_DEBUG((LM_INFO, "DPM_GID=%C\n", dpm_gid_.c_str()));
-  ACE_DEBUG((LM_INFO, "DPM_APPLICATION_ID=%C\n", dpm_application_id_.c_str()));
-  ACE_DEBUG((LM_INFO, "DPM_PASSWORD=%C\n", dpm_password_.empty() ? "not set" : "set"));
-  ACE_DEBUG((LM_INFO, "DPM_NONCE=%C\n", dpm_nonce_.c_str()));
-  ACE_DEBUG((LM_INFO, "RELAY_CONFIG_URL=%C\n", relay_config_url_.c_str()));
-  ACE_DEBUG((LM_INFO, "DATA_PATH=%C\n", data_path_.c_str()));
-  ACE_DEBUG((LM_INFO, "DOMAIN_ID=%d\n", domain_id_));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: DPM_URL=%C\n", dpm_url_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: DPM_GID=%C\n", dpm_gid_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: DPM_APPLICATION_ID=%C\n", dpm_application_id_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: DPM_PASSWORD=%C\n", dpm_password_.empty() ? "not set" : "set"));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: DPM_NONCE=%C\n", dpm_nonce_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: RELAY_CONFIG_URL=%C\n", relay_config_url_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: DATA_PATH=%C\n", data_path_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: DOMAIN_ID=%d\n", domain_id_));
   for_each(LogTopicName());
-  ACE_DEBUG((LM_INFO, "HTTP_PORT=%d\n", http_port_));
-  ACE_DEBUG((LM_INFO, "CREATE_WRITERS=%d\n", create_writers_));
-  ACE_DEBUG((LM_INFO, "SERVER_URL=%C\n", server_url_.c_str()));
-  ACE_DEBUG((LM_INFO, "SERVER_POLL_PERIOD=%d\n", server_poll_period_.sec));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: HTTP_PORT=%d\n", http_port_));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: CREATE_WRITERS=%d\n", create_writers_));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: SERVER_URL=%C\n", server_url_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: SERVER_POLL_PERIOD=%d\n", server_poll_period_.sec));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: ACCESS_CONTROL_ALLOW_ORIGIN=%C\n", access_control_allow_origin_.c_str()));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: RTPS_RELAY_ONLY=%d\n", rtps_relay_only_));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: ENABLE_HTTP_LOG_ACCESS=%d\n", enable_http_log_access_));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: ENABLE_OBSERVER=%d\n", enable_observer_));
 }
 
 DDS::ReturnCode_t
 Application::download_security_documents()
 {
   if (dpm_url_.empty()) {
-    ACE_ERROR((LM_ERROR, "DPM_URL cannot be empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: DPM_URL cannot be empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
   if (dpm_application_id_.empty()) {
-    ACE_ERROR((LM_ERROR, "DPM_APPLICATION_ID cannot be empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: DPM_APPLICATION_ID cannot be empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
   if (dpm_password_.empty()) {
-    ACE_ERROR((LM_ERROR, "DPM_PASSWORD cannot be empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: DPM_PASSWORD cannot be empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
   if (dpm_nonce_.empty()) {
-    ACE_ERROR((LM_ERROR, "DPM_NONCE cannot be empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: DPM_NONCE cannot be empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
@@ -270,7 +300,6 @@ Application::download_security_documents()
       easy.add<CURLOPT_READDATA>(input.get_stream());
 
       easy.perform();
-      // TODO: Check status and error handling.
 
       // Reset.
       curl::curl_header empty_header;
@@ -319,18 +348,14 @@ Application::download_security_documents()
       public_key_ = document["public"].GetString();
       private_key_ = document["private"].GetString();
     } else {
-      ACE_ERROR((LM_ERROR, "Could not extract public and private key\n"));
+      ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: Could not extract public and private key\n"));
       return DDS::RETCODE_ERROR;
     }
 
     return DDS::RETCODE_OK;
   } catch (curl_easy_exception& error) {
-    // TODO: Error handling.
-    // If you want to get the entire error stack we can do:
-    curlcpp_traceback errors = error.get_traceback();
-    // Otherwise we could print the stack like this:
+    ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: %C\n", error.what()));
     error.print_traceback();
-
     return DDS::RETCODE_ERROR;
   }
 }
@@ -339,7 +364,7 @@ DDS::ReturnCode_t
 Application::download_relay_config()
 {
   if (relay_config_url_.empty()) {
-    ACE_ERROR((LM_ERROR, "RELAY_CONFIG_URL cannot be empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::download_relay_config: RELAY_CONFIG_URL cannot be empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
@@ -354,7 +379,6 @@ Application::download_relay_config()
     easy.add<CURLOPT_WRITEDATA>(stream_ios.get_stream());
 
     easy.perform();
-    // TODO: Check status and error handling.
 
     rapidjson::Document document;
     document.Parse(stream.str().c_str());
@@ -377,12 +401,8 @@ Application::download_relay_config()
 
     return DDS::RETCODE_OK;
   } catch (curl_easy_exception& error) {
-    // TODO: Error handling.
-    // If you want to get the entire error stack we can do:
-    curlcpp_traceback errors = error.get_traceback();
-    // Otherwise we could print the stack like this:
+    ACE_ERROR((LM_ERROR, "ERROR: Application::download_relay_config: %C\n", error.what()));
     error.print_traceback();
-
     return DDS::RETCODE_ERROR;
   }
 }
@@ -391,20 +411,19 @@ DDS::ReturnCode_t
 Application::setup_discovery()
 {
   if (spdp_rtps_relay_address_.empty()) {
-    ACE_ERROR((LM_ERROR, "SpdpRtpsRelayAddress is empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::setup_discovery: SpdpRtpsRelayAddress is empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
   if (sedp_rtps_relay_address_.empty()) {
-    ACE_ERROR((LM_ERROR, "SedpRtpsRelayAddress is empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::setup_discovery: SedpRtpsRelayAddress is empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
   // Use RtpsDiscovery.
   OpenDDS::DCPS::RcHandle<OpenDDS::RTPS::RtpsDiscovery> discovery = OpenDDS::DCPS::make_rch<OpenDDS::RTPS::RtpsDiscovery>("RtpsDiscovery");
   discovery->config()->use_rtps_relay(true);
-  // TODO: Disable RTPS_RELAY_ONLY.
-  discovery->config()->rtps_relay_only(true);
+  discovery->config()->rtps_relay_only(rtps_relay_only_);
   discovery->config()->spdp_rtps_relay_address(ACE_INET_Addr(spdp_rtps_relay_address_.c_str()));
   discovery->config()->sedp_rtps_relay_address(ACE_INET_Addr(sedp_rtps_relay_address_.c_str()));
   discovery->config()->sedp_max_message_size(1400);
@@ -420,18 +439,18 @@ DDS::ReturnCode_t
 Application::setup_transport()
 {
   if (data_rtps_relay_address_.empty()) {
-    ACE_ERROR((LM_ERROR, "DataRtpsRelayAddress is empty\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::setup_transport: DataRtpsRelayAddress is empty\n"));
     return DDS::RETCODE_ERROR;
   }
 
   transport_config_ = TheTransportRegistry->create_config("RtpsTransport");
   if (!transport_config_) {
-    ACE_ERROR((LM_ERROR, "ERROR: create_config failed\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::setup_transport: create_config failed\n"));
     return DDS::RETCODE_ERROR;
   }
   OpenDDS::DCPS::TransportInst_rch instance = TheTransportRegistry->create_inst("RtpsTransport", "rtps_udp");
   if (!instance) {
-    ACE_ERROR((LM_ERROR, "ERROR: create_inst failed\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::setup_transport: create_inst failed\n"));
     return DDS::RETCODE_ERROR;
   }
 
@@ -440,8 +459,7 @@ Application::setup_transport()
   rtps->max_message_size_ = 1400;
   rtps->responsive_mode_ = true;
   rtps->use_rtps_relay(true);
-  // TODO: Disable RTPS_RELAY_ONLY.
-  rtps->rtps_relay_only(true);
+  rtps->rtps_relay_only(rtps_relay_only_);
   rtps->rtps_relay_address(OpenDDS::DCPS::NetworkAddress(data_rtps_relay_address_.c_str()));
 
   transport_config_->instances_.push_back(instance);
@@ -484,7 +502,7 @@ Application::create_participant(int argc, ACE_TCHAR* argv[])
                                                                  0,
                                                                  OpenDDS::DCPS::DEFAULT_STATUS_MASK);
   if (!participant_) {
-    ACE_ERROR((LM_ERROR, "ERROR: create_participant failed\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::create_participant: create_participant failed\n"));
     return DDS::RETCODE_ERROR;
   }
 
@@ -510,14 +528,14 @@ public:
   DDS::ReturnCode_t operator() (Unit<T>& unit)
   {
     if (unit.topic_name.empty()) {
-      ACE_ERROR((LM_ERROR, "%C cannot be empty\n", unit.topic_name_key.c_str()));
+      ACE_ERROR((LM_ERROR, "ERROR: CreateTopic::operator(): %C cannot be empty\n", unit.topic_name_key.c_str()));
       return DDS::RETCODE_ERROR;
     }
 
     typedef typename OpenDDS::DCPS::DDSTraits<T>::TypeSupportImplType ImplType;
     unit.type_support = new ImplType;
     if (unit.type_support->register_type(participant_, "") != DDS::RETCODE_OK) {
-      ACE_ERROR((LM_ERROR, "ERROR: register_type failed\n"));
+      ACE_ERROR((LM_ERROR, "ERROR: CreateTopic::operator(): register_type failed\n"));
       return DDS::RETCODE_ERROR;
     }
     CORBA::String_var type_name = unit.type_support->get_type_name();
@@ -527,7 +545,7 @@ public:
                                             0,
                                             OpenDDS::DCPS::DEFAULT_STATUS_MASK);
     if (!unit.topic) {
-      ACE_ERROR((LM_ERROR, "ERROR: create_topic (%C) failed!\n", unit.topic_name.c_str()));
+      ACE_ERROR((LM_ERROR, "ERROR: CreateTopic::operator(): create_topic (%C) failed!\n", unit.topic_name.c_str()));
       return DDS::RETCODE_ERROR;
     }
 
@@ -559,12 +577,12 @@ public:
                                            0,
                                            OpenDDS::DCPS::DEFAULT_STATUS_MASK);
     if (!writer) {
-      ACE_ERROR((LM_ERROR, "ERROR: create_datawriter failed!\n"));
+      ACE_ERROR((LM_ERROR, "ERROR: CreateDataWriter::operator(): create_datawriter failed!\n"));
       return DDS::RETCODE_ERROR;
     }
     unit.writer = OpenDDS::DCPS::DDSTraits<T>::DataWriterType::_narrow(writer);
     if (!unit.writer) {
-      ACE_ERROR((LM_ERROR, "ERROR: narrow failed!\n"));
+      ACE_ERROR((LM_ERROR, "ERROR: CreateDataWriter::operator(): narrow failed!\n"));
       return DDS::RETCODE_ERROR;
     }
 
@@ -583,17 +601,19 @@ Application::create_datawriters()
                                                                 0,
                                                                 OpenDDS::DCPS::DEFAULT_STATUS_MASK);
   if (!publisher) {
-    ACE_ERROR((LM_ERROR, "ERROR: create_publisher failed!\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::create_datawriters: create_publisher failed!\n"));
     return DDS::RETCODE_ERROR;
   }
 
   DDS::DataWriterQos qos;
   if (publisher->get_default_datawriter_qos(qos) != DDS::RETCODE_OK) {
+    ACE_ERROR((LM_ERROR, "ERROR: Application::create_datawriters: get_default_datawriter_qos failed!\n"));
     return DDS::RETCODE_ERROR;
   }
   qos.reliability.kind = DDS::RELIABLE_RELIABILITY_QOS;
   qos.durability.kind = DDS::TRANSIENT_LOCAL_DURABILITY_QOS;
   if (publisher->set_default_datawriter_qos(qos) != DDS::RETCODE_OK) {
+    ACE_ERROR((LM_ERROR, "ERROR: Application::create_datawriters: set_default_datawriter_qos failed!\n"));
     return DDS::RETCODE_ERROR;
   }
 
@@ -615,12 +635,12 @@ public:
                                             0,
                                             OpenDDS::DCPS::DEFAULT_STATUS_MASK);
     if (!reader) {
-      ACE_ERROR((LM_ERROR, "ERROR: create_datareader failed!\n"));
+      ACE_ERROR((LM_ERROR, "ERROR: CreateDataReader::operator(): create_datareader failed!\n"));
       return DDS::RETCODE_ERROR;
     }
     unit.reader = OpenDDS::DCPS::DDSTraits<T>::DataReaderType::_narrow(reader);
     if (!unit.reader) {
-      ACE_ERROR((LM_ERROR, "ERROR: narrow failed!\n"));
+      ACE_ERROR((LM_ERROR, "ERROR: CreateDataReader::operator(): narrow failed!\n"));
       return DDS::RETCODE_ERROR;
     }
 
@@ -639,17 +659,19 @@ Application::create_datareaders()
                                                                    0,
                                                                    OpenDDS::DCPS::DEFAULT_STATUS_MASK);
   if (!subscriber) {
-    ACE_ERROR((LM_ERROR, "ERROR: create_subscriber failed!\n"));
+    ACE_ERROR((LM_ERROR, "ERROR: Application::create_datareaders: create_subscriber failed!\n"));
     return DDS::RETCODE_ERROR;
   }
 
   DDS::DataReaderQos qos;
   if (subscriber->get_default_datareader_qos(qos) != DDS::RETCODE_OK) {
+    ACE_ERROR((LM_ERROR, "ERROR: Application::create_datareaders: get_default_datareader_qos failed!\n"));
     return DDS::RETCODE_ERROR;
   }
   qos.reliability.kind = DDS::RELIABLE_RELIABILITY_QOS;
   qos.durability.kind = DDS::TRANSIENT_LOCAL_DURABILITY_QOS;
   if (subscriber->set_default_datareader_qos(qos) != DDS::RETCODE_OK) {
+    ACE_ERROR((LM_ERROR, "ERROR: Application::create_datareaders: set_default_datareader_qos failed!\n"));
     return DDS::RETCODE_ERROR;
   }
 
