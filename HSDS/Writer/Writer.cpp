@@ -503,7 +503,9 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     if (application.create_participant(argc, argv) != DDS::RETCODE_OK) {
       return EXIT_FAILURE;
     }
-    application.install_observer();
+    if (application.enable_observer()) {
+      application.install_observer();
+    }
     if (application.create_topics() != DDS::RETCODE_OK) {
       return EXIT_FAILURE;
     }
@@ -512,7 +514,11 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
     }
   }
 
-  httpserver::webserver webserver = httpserver::create_webserver(application.http_port()).log_access(log_access_fn);
+  httpserver::create_webserver create_ws(application.http_port());
+  if (application.enable_http_log_access()) {
+    create_ws.log_access(log_access_fn);
+  }
+  httpserver::webserver webserver = create_ws;
 
   // Create /hsds endpoints.
   HsdsResource<HSDS3::Service> service_hsds_resource(application, webserver);

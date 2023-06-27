@@ -201,6 +201,16 @@ Application::load_environment_variables()
   if (e) {
     rtps_relay_only_ = ACE_OS::atoi(e);
   }
+
+  e = getenv("ENABLE_HTTP_LOG_ACCESS");
+  if (e) {
+    enable_http_log_access_ = ACE_OS::atoi(e);
+  }
+
+  e = getenv("ENABLE_OBSERVER");
+  if (e) {
+    enable_observer_ = ACE_OS::atoi(e);
+  }
 }
 
 struct LogTopicName {
@@ -230,6 +240,8 @@ Application::dump_configuration() const
   ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: SERVER_POLL_PERIOD=%d\n", server_poll_period_.sec));
   ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: ACCESS_CONTROL_ALLOW_ORIGIN=%C\n", access_control_allow_origin_.c_str()));
   ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: RTPS_RELAY_ONLY=%d\n", rtps_relay_only_));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: ENABLE_HTTP_LOG_ACCESS=%d\n", enable_http_log_access_));
+  ACE_DEBUG((LM_INFO, "INFO: Application::dump_configuration: ENABLE_OBSERVER=%d\n", enable_observer_));
 }
 
 DDS::ReturnCode_t

@@ -238,7 +238,9 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   if (application.create_participant(argc, argv) != DDS::RETCODE_OK) {
     return EXIT_FAILURE;
   }
-  application.install_observer();
+  if (application.enable_observer()) {
+    application.install_observer();
+  }
   if (application.create_topics() != DDS::RETCODE_OK) {
     return EXIT_FAILURE;
   }
@@ -247,7 +249,11 @@ ACE_TMAIN(int argc, ACE_TCHAR *argv[])
   }
 
   // Provide endpoints to get data out of the reader.
-  httpserver::webserver webserver = httpserver::create_webserver(application.http_port());
+  httpserver::create_webserver create_ws(application.http_port());
+  if (application.enable_http_log_access()) {
+    create_ws.log_access(log_access_fn);
+  }
+  httpserver::webserver webserver = create_ws;
 
   HsdsResource<HSDS3::Service> service_hsds_resource(application, webserver, false);
   HsdsResource<HSDS3::Phone> phone_hsds_resource(application, webserver, false);

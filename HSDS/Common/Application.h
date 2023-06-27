@@ -42,6 +42,8 @@ public:
     , http_port_(8080)
     , create_writers_(true)
     , rtps_relay_only_(true)
+    , enable_http_log_access_(true)
+    , enable_observer_(true)
     , transaction_(0)
     , accessibility_("ACCESSIBILITY_TOPIC", HSDS3::ACCESSIBILITY_ENDPOINT, HSDS3::ACCESSIBILITY_JSON_FILE)
     , address_("ADDRESS_TOPIC", HSDS3::ADDRESS_ENDPOINT, HSDS3::ADDRESS_JSON_FILE)
@@ -93,6 +95,8 @@ public:
 
   unsigned short http_port() const { return http_port_; }
   bool create_writers() const { return create_writers_; }
+  bool enable_http_log_access() const { return enable_http_log_access_; }
+  bool enable_observer() const { return enable_observer_; }
   const std::string& server_url() const { return server_url_; }
   DDS::Duration_t server_poll_period() const
   {
@@ -464,6 +468,9 @@ public:
   std::string spdp_rtps_relay_address_;
   std::string sedp_rtps_relay_address_;
   std::string data_rtps_relay_address_;
+
+  bool enable_http_log_access_;
+  bool enable_observer_;
 
   OpenDDS::DCPS::TransportConfig_rch transport_config_;
   DDS::DomainParticipantFactory_var domain_participant_factory_;
