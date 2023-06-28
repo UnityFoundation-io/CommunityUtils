@@ -33,16 +33,26 @@ jobs:
           repository: OpenDDS/OpenDDS
           path: OpenDDS
           ref: master
+      - name: configure OpenDDS
+        shell: bash
+        run: |
+          cd OpenDDS
+          ./configure --ace-github-latest --security
       - name: get OpenDDS commit
         shell: bash
         run: |
           cd OpenDDS
           echo OPENDDS_COMMIT=$(git rev-parse HEAD) >> $GITHUB_ENV
+      - name : get ACE_TAO commit
+        shell: bash
+        run: |
+          cd OpenDDS/ACE_TAO
+          echo ACE_COMMIT=$(git rev-parse HEAD) >> $GITHUB_ENV
       - name: cache OpenDDS and ACE_TAO
         id: cache-artifact
         uses: actions/cache@v3
         with:
-          key: c00_${{ github.job }}_OpenDDS_${{ env.OPENDDS_COMMIT }}
+          key: c00_${{ github.job }}_OpenDDS_${{ env.OPENDDS_COMMIT }}_ACE_${{ env.ACE_COMMIT }}
           path: |
             ${{ github.job }}_ACE_TAO.tar.xz
             ${{ github.job }}_OpenDDS.tar.xz
@@ -50,12 +60,6 @@ jobs:
         if: steps.cache-artifact.outputs.cache-hit != 'true'
         shell: bash
         run: sudo apt-get install -y libxerces-c-dev
-      - name: configure OpenDDS
-        if: steps.cache-artifact.outputs.cache-hit != 'true'
-        shell: bash
-        run: |
-          cd OpenDDS
-          ./configure --ace-github-latest --security
       - name: check build configuration
         if: steps.cache-artifact.outputs.cache-hit != 'true'
         shell: bash
