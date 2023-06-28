@@ -469,11 +469,6 @@
 //   }
 // };
 
-void log_access_fn(const std::string& url)
-{
-  ACE_DEBUG((LM_INFO, "ACCESSING: %C\n", url.c_str()));
-}
-
 int
 ACE_TMAIN(int argc, ACE_TCHAR *argv[])
 {

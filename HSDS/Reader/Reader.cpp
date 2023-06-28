@@ -169,7 +169,7 @@ public:
             synchronize(application_, easy);
             // TODO: Handle output.
           } catch (curl_easy_exception& error) {
-            ACE_ERROR((LM_ERROR, "ERROR: Listener::on_data_available: failed DELETE for sample %u: %C\d",
+            ACE_ERROR((LM_ERROR, "ERROR: Listener::on_data_available: failed DELETE for sample %u: %C\n",
                        idx, error.what()));
             error.print_traceback();
           }

@@ -10,6 +10,11 @@
 #include <httpserver.hpp>
 
 
+inline void log_access_fn(const std::string& url)
+{
+  ACE_DEBUG((LM_INFO, "ACCESSING: %C\n", url.c_str()));
+}
+
 class ErrorResponse {
 public:
   ErrorResponse()
