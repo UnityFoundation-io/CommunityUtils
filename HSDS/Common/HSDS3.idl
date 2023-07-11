@@ -233,8 +233,8 @@ module HSDS3 {
     long interval;
     string byday;
     string byweekno;
-    long bymonthday;
-    long byyearday;
+    string bymonthday;
+    string byyearday;
     string description;
     string opens_at; // Time?
     string closes_at; // Time?
