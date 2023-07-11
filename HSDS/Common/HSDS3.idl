@@ -22,6 +22,7 @@ module HSDS3 {
     string logo;
     string uri;
     string parent_organization_id;
+    string source_id;
   };
   const string ORGANIZATION_ENDPOINT = "/hsds3/organization";
   const string ORGANIZATION_JSON_FILE = "organization.json";
@@ -36,6 +37,7 @@ module HSDS3 {
     string identifier_scheme;
     string identifier_type;
     string identifier;
+    string source_id;
   };
   const string ORGANIZATION_IDENTIFIER_ENDPOINT = "/hsds3/organization_identifier";
   const string ORGANIZATION_IDENTIFIER_JSON_FILE = "organization_identifier.json";
@@ -50,6 +52,7 @@ module HSDS3 {
     string name;
     string alternate_name;
     string description;
+    string source_id;
   };
   const string PROGRAM_ENDPOINT = "/hsds3/program";
   const string PROGRAM_JSON_FILE = "program.json";
@@ -87,6 +90,7 @@ module HSDS3 {
     string licenses;
     string alert;
     string last_modified;
+    string source_id;
   };
   const string SERVICE_ENDPOINT = "/hsds3/service";
   const string SERVICE_JSON_FILE = "service.json";
@@ -102,6 +106,7 @@ module HSDS3 {
     string link_type;
     string link_entity;
     string value;
+    string source_id;
   };
   const string ATTRIBUTE_ENDPOINT = "/hsds3/attribute";
   const string ATTRIBUTE_JSON_FILE = "attribute.json";
@@ -115,6 +120,7 @@ module HSDS3 {
     string service_id;
     string location_id;
     string description;
+    string source_id;
   };
   const string SERVICE_AT_LOCATION_ENDPOINT = "/hsds3/service_at_location";
   const string SERVICE_AT_LOCATION_JSON_FILE = "service_at_location.json";
@@ -140,6 +146,7 @@ module HSDS3 {
     float longitude;
     string external_identifier;
     string external_identifier_type;
+    string source_id;
   };
   const string LOCATION_ENDPOINT = "/hsds3/location";
   const string LOCATION_JSON_FILE = "location.json";
@@ -168,6 +175,7 @@ module HSDS3 {
     long extension;
     string type;
     string description;
+    string source_id;
   };
   const string PHONE_ENDPOINT = "/hsds3/phone";
   const string PHONE_JSON_FILE = "phone.json";
@@ -186,6 +194,7 @@ module HSDS3 {
     string title;
     string department;
     string email;
+    string source_id;
   };
   const string CONTACT_ENDPOINT = "/hsds3/contact";
   const string CONTACT_JSON_FILE = "contact.json";
@@ -206,6 +215,7 @@ module HSDS3 {
     string postal_code;
     string country;
     string address_type;
+    string source_id;
   };
   const string ADDRESS_ENDPOINT = "/hsds3/address";
   const string ADDRESS_JSON_FILE = "address.json";
@@ -241,6 +251,7 @@ module HSDS3 {
     string schedule_link;
     string attending_type;
     string notes;
+    string source_id;
   };
   const string SCHEDULE_ENDPOINT = "/hsds3/schedule";
   const string SCHEDULE_JSON_FILE = "schedule.json";
@@ -254,6 +265,7 @@ module HSDS3 {
     string organization_id;
     string service_id;
     string source;
+    string source_id;
   };
   const string FUNDING_ENDPOINT = "/hsds3/funding";
   const string FUNDING_JSON_FILE = "funding.json";
@@ -275,6 +287,7 @@ module HSDS3 {
     string extent;
     string extent_type;
     string uri;
+    string source_id;
   };
   const string SERVICE_AREA_ENDPOINT = "/hsds3/service_area";
   const string SERVICE_AREA_JSON_FILE = "service_area.json";
@@ -288,6 +301,7 @@ module HSDS3 {
     string service_id;
     string document;
     string uri;
+    string source_id;
   };
   const string REQUIRED_DOCUMENT_ENDPOINT = "/hsds3/required_document";
   const string REQUIRED_DOCUMENT_JSON_FILE = "required_document.json";
@@ -304,6 +318,7 @@ module HSDS3 {
     string name;
     string code;
     string note;
+    string source_id;
   };
   const string LANGUAGE_ENDPOINT = "/hsds3/language";
   const string LANGUAGE_JSON_FILE = "language.json";
@@ -318,6 +333,7 @@ module HSDS3 {
     string description;
     string details;
     string url;
+    string source_id;
   };
   const string ACCESSIBILITY_ENDPOINT = "/hsds3/accessibility";
   const string ACCESSIBILITY_JSON_FILE = "accessibility.json";
@@ -335,6 +351,7 @@ module HSDS3 {
     string currency;
     float amount;
     string amount_description;
+    string source_id;
   };
   const string COST_OPTION_ENDPOINT = "/hsds3/cost_option";
   const string COST_OPTION_JSON_FILE = "cost_option.json";
@@ -349,6 +366,7 @@ module HSDS3 {
     string description;
     string uri;
     string version;
+    string source_id;
   };
   const string TAXONOMY_ENDPOINT = "/hsds3/taxonomy";
   const string TAXONOMY_JSON_FILE = "taxonomy.json";
@@ -367,6 +385,7 @@ module HSDS3 {
     string language;
     string taxonomy_id;
     string term_uri;
+    string source_id;
   };
   const string TAXONOMY_TERM_ENDPOINT = "/hsds3/taxonomy_term";
   const string TAXONOMY_TERM_JSON_FILE = "taxonomy_term.json";
@@ -406,6 +425,7 @@ module HSDS3 {
     string previous_value;
     string replacement_value;
     string updated_by;
+    string source_id;
   };
   const string METADATA_ENDPOINT = "/hsds3/metadata";
   const string METADATA_JSON_FILE = "metadata.json";
@@ -419,6 +439,7 @@ module HSDS3 {
     string name;
     string language;
     string character_set;
+    string source_id;
   };
   const string META_TABLE_DESCRIPTION_ENDPOINT = "/hsds3/meta_table_description";
   const string META_TABLE_DESCRIPTION_JSON_FILE = "meta_table_description.json";
