@@ -40,7 +40,7 @@ jobs:
         shell: bash
         run: |
           cd OpenDDS
-          ./configure --ace-github-latest --security
+          ./configure --ace-github-latest --std=c++17 --security
       - name: get OpenDDS commit
         shell: bash
         run: |
@@ -55,7 +55,7 @@ jobs:
         id: cache-artifact
         uses: actions/cache@v3
         with:
-          key: c00_${{ github.job }}_OpenDDS_${{ env.OPENDDS_COMMIT }}_ACE_${{ env.ACE_COMMIT }}
+          key: c01_${{ github.job }}_OpenDDS_${{ env.OPENDDS_COMMIT }}_ACE_${{ env.ACE_COMMIT }}
           path: |
             ${{ github.job }}_ACE_TAO.tar.xz
             ${{ github.job }}_OpenDDS.tar.xz
@@ -137,7 +137,7 @@ jobs:
       with:
         repository: etr/libhttpserver
         path: libhttpserver
-        ref: 0.18.2
+        ref: 0.19.0
     - name: install libhttpserver
       shell: bash
       run: |

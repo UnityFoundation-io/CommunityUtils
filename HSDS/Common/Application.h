@@ -11,6 +11,8 @@
 #include <dds/DCPS/DCPS_Utils.h>
 #include <dds/DCPS/transport/framework/TransportConfig_rch.h>
 
+#include "jwt-cpp/jwt.h"
+
 template <typename T>
 struct Unit {
   Unit(const std::string& key,
@@ -41,6 +43,7 @@ public:
     : domain_id_(1)
     , http_port_(8080)
     , create_writers_(true)
+    , verifier_(jwt::verify().with_issuer("dds-permissions-manager"))
     , rtps_relay_only_(true)
     , enable_http_log_access_(true)
     , enable_observer_(true)
@@ -440,6 +443,8 @@ public:
 
   ACE_Thread_Mutex& get_mutex() { return mutex_; }
 
+
+  const jwt::verifier<jwt::default_clock, jwt::traits::kazuho_picojson>& verifier() const { return verifier_; }
  private:
   std::string dpm_url_;
   std::string dpm_gid_;
@@ -463,6 +468,7 @@ public:
   std::string public_key_;
   std::string private_key_;
   std::string permissions_;
+  jwt::verifier<jwt::default_clock, jwt::traits::kazuho_picojson> verifier_;
 
   bool rtps_relay_only_;
   std::string spdp_rtps_relay_address_;

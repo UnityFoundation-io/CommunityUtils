@@ -22,6 +22,11 @@ public:
     , message_("Bad Request")
   {}
 
+  static ErrorResponse make_unauthorized()
+  {
+    return ErrorResponse(httpserver::http::http_utils::http_unauthorized, "Unauthorized");
+  }
+
   static ErrorResponse make_bad_request(const std::string& message)
   {
     return ErrorResponse(httpserver::http::http_utils::http_bad_request, message);
@@ -60,6 +65,33 @@ public:
 protected:
 
   virtual void add_headers(std::shared_ptr<httpserver::http_response>) const {}
+
+  bool is_authorized(const httpserver::http_request& request) const
+  {
+    const auto auth = request.get_header("Authorization");
+
+    const auto scheme_term = auth.find(' ', 0);
+    if (scheme_term == std::string::npos) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: ResourceBase::is_authorized: can't find JWT\n"));
+      return false;
+    }
+    if (auth.substr(0, scheme_term) != "Bearer") {
+      ACE_ERROR((LM_NOTICE, "NOTICE: ResourceBase::is_authorized: can't find JWT\n"));
+      return false;
+    }
+
+    const std::string token(auth.substr(scheme_term + 1));
+    const auto decoded = jwt::decode(token);
+    std::error_code ec;
+    application_.verifier().verify(decoded, ec);
+
+    if (ec) {
+      ACE_ERROR((LM_NOTICE, "NOTICE: ResourceBase::is_authorized: JWT could not be verified!\n"));
+      return false;
+    }
+
+    return true;
+  }
 
   // TODO: Could we have done this in IDL?
   bool check_input(ErrorResponse& err,

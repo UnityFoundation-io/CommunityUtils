@@ -331,25 +331,62 @@ Application::download_security_documents()
       return ret;
     }
 
-    std::string key_pair;
-    ret = download_security_document(easy, dpm_url_ + "/api/applications/key_pair?nonce=" + nonce, key_pair);
-    if (ret != DDS::RETCODE_OK) {
-      return ret;
+    {
+      std::string key_pair;
+      ret = download_security_document(easy, dpm_url_ + "/api/applications/key_pair?nonce=" + nonce, key_pair);
+      if (ret != DDS::RETCODE_OK) {
+        return ret;
+      }
+
+      rapidjson::Document document;
+      document.Parse(key_pair.c_str());
+
+      if (document.IsObject() &&
+          document.HasMember("public") &&
+          document["public"].IsString() &&
+          document.HasMember("private") &&
+          document["private"].IsString()) {
+        public_key_ = document["public"].GetString();
+        private_key_ = document["private"].GetString();
+      } else {
+        ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: Could not extract public and private key\n"));
+        return DDS::RETCODE_ERROR;
+      }
     }
 
-    rapidjson::Document document;
-    document.Parse(key_pair.c_str());
+    {
+      verifier_.with_subject(dpm_application_id_);
 
-    if (document.IsObject() &&
-        document.HasMember("public") &&
-        document["public"].IsString() &&
-        document.HasMember("private") &&
-        document["private"].IsString()) {
-      public_key_ = document["public"].GetString();
-      private_key_ = document["private"].GetString();
-    } else {
-      ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: Could not extract public and private key\n"));
-      return DDS::RETCODE_ERROR;
+      std::string public_keys;
+      ret = download_security_document(easy, dpm_url_ + "/auth/public_keys", public_keys);
+      if (ret != DDS::RETCODE_OK) {
+        return ret;
+      }
+
+      bool have_key = false;
+      rapidjson::Document document;
+      document.Parse(public_keys.c_str());
+      if (document.IsArray()) {
+        for (rapidjson::SizeType idx = 0; idx != document.Size(); ++idx) {
+          if (document[idx].IsObject() &&
+              document[idx].HasMember("public") &&
+              document[idx]["public"].IsString()) {
+            verifier_.allow_algorithm(jwt::algorithm::rs256(document[idx]["public"].GetString()));
+            have_key = true;
+          } else {
+            ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: DPM public key is not a string\n"));
+            return DDS::RETCODE_ERROR;
+          }
+        }
+      } else {
+        ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: Could not extract DPM public keys\n"));
+        return DDS::RETCODE_ERROR;
+      }
+
+      if (!have_key) {
+        ACE_ERROR((LM_ERROR, "ERROR: Application::download_security_documents: No DPM public keys\n"));
+        return DDS::RETCODE_ERROR;
+      }
     }
 
     return DDS::RETCODE_OK;
@@ -424,8 +461,8 @@ Application::setup_discovery()
   OpenDDS::DCPS::RcHandle<OpenDDS::RTPS::RtpsDiscovery> discovery = OpenDDS::DCPS::make_rch<OpenDDS::RTPS::RtpsDiscovery>("RtpsDiscovery");
   discovery->config()->use_rtps_relay(true);
   discovery->config()->rtps_relay_only(rtps_relay_only_);
-  discovery->config()->spdp_rtps_relay_address(ACE_INET_Addr(spdp_rtps_relay_address_.c_str()));
-  discovery->config()->sedp_rtps_relay_address(ACE_INET_Addr(sedp_rtps_relay_address_.c_str()));
+  discovery->config()->spdp_rtps_relay_address(OpenDDS::DCPS::NetworkAddress(spdp_rtps_relay_address_.c_str()));
+  discovery->config()->sedp_rtps_relay_address(OpenDDS::DCPS::NetworkAddress(sedp_rtps_relay_address_.c_str()));
   discovery->config()->sedp_max_message_size(1400);
   discovery->config()->secure_participant_user_data(true);
   discovery->config()->sedp_responsive_mode(true);

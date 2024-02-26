@@ -5,6 +5,7 @@ project: opendds_cxx11, dcps_rtps_udp, CommunitySecurityPlugin, install {
   lit_libs += curlcpp
   idlflags += -Wb,export_include=HSDS_Common_export.h -Wb,export_macro=HSDS_Common_Export -SS
   dcps_ts_flags += -Gxtypes-complete -Gequality -Wb,export_include=HSDS_Common_export.h -Wb,export_macro=HSDS_Common_Export
+  includes += .
 
   TypeSupport_Files {
     HSDS3.idl

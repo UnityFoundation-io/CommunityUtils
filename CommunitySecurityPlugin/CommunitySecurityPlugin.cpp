@@ -85,7 +85,12 @@ private:
       return OpenDDS::Security::CommonUtilities::set_security_error(ex, -1, 0, "CommunityAccessControl::common_check: Subject name does not contain a SN");
     }
 
-    if (pos->second != dpmgid.in()) {
+    const std::map<std::string, std::string>::const_iterator pos2 = pos->find("SN");
+    if (pos2 == pos->end()) {
+      return OpenDDS::Security::CommonUtilities::set_security_error(ex, -1, 0, "CommunityAccessControl::common_check: Subject name does not contain a DPMGID");
+    }
+
+    if (pos2->second != dpmgid.in()) {
       return OpenDDS::Security::CommonUtilities::set_security_error(ex, -1, 0, "CommunityAccessControl::common_check: dpmgid from sample does not match SN from subject name");
     }
 

@@ -24,7 +24,11 @@ public:
     ws.register_resource(application.unit<T>().endpoint + "/{dpmgid}/{id}", this);
   }
 
-  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
+  std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
+    if (!ResourceBase::is_authorized(request)) {
+      return this->respond(ErrorResponse::make_unauthorized());
+    }
+
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -40,7 +44,8 @@ public:
     }
 
     // Parse the input.
-    rapidjson::StringStream ss(request.get_content().c_str());
+    const std::string s(request.get_content());
+    rapidjson::StringStream ss(s.c_str());
     T element;
     if (!OpenDDS::DCPS::from_json(element, ss)) {
       ACE_ERROR((LM_NOTICE, "NOTICE: HsdsElementResource::render_PUT: failed to parse input json!!\n"));
@@ -73,7 +78,11 @@ public:
     return this->respond_with_json(OpenDDS::DCPS::to_json(element));
   }
 
-  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
+  std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
+    if (!ResourceBase::is_authorized(request)) {
+      return this->respond(ErrorResponse::make_unauthorized());
+    }
+
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -100,7 +109,11 @@ public:
     return this->respond_with_json(OpenDDS::DCPS::to_json(*pos));
   }
 
-  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request& request) {
+  std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request& request) {
+    if (!ResourceBase::is_authorized(request)) {
+      return this->respond(ErrorResponse::make_unauthorized());
+    }
+
     // Extract the dpmgid and id from the URL.
     const std::string dpmgid = request.get_arg("dpmgid");
     const std::string id = request.get_arg("id");
@@ -150,12 +163,17 @@ public:
     ws.register_resource(application.unit<T>().endpoint, this);
   }
 
-  const std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
+  std::shared_ptr<httpserver::http_response> render_PUT(const httpserver::http_request& request) {
+    if (!ResourceBase::is_authorized(request)) {
+      return this->respond(ErrorResponse::make_unauthorized());
+    }
+
     typedef typename UnitResourceBase<T>::ContainerType ContainerType;
     ContainerType new_container;
 
     // Parse the input.
-    rapidjson::StringStream ss(request.get_content().c_str());
+    const std::string s(request.get_content());
+    rapidjson::StringStream ss(s.c_str());
     OpenDDS::DCPS::JsonValueReader<rapidjson::StringStream> jvr(ss);
     if (!jvr.begin_sequence()) {
       ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_PUT: begin_sequence failed!\n"));
@@ -271,11 +289,16 @@ public:
     return this->respond_with_no_content();
   }
 
-  const std::shared_ptr<httpserver::http_response> render_POST(const httpserver::http_request& request) {
+  std::shared_ptr<httpserver::http_response> render_POST(const httpserver::http_request& request) {
+    if (!ResourceBase::is_authorized(request)) {
+      return this->respond(ErrorResponse::make_unauthorized());
+    }
+
     std::vector<T> list;
 
     // Parse the input.
-    rapidjson::StringStream ss(request.get_content().c_str());
+    const std::string s(request.get_content());
+    rapidjson::StringStream ss(s.c_str());
     OpenDDS::DCPS::JsonValueReader<rapidjson::StringStream> jvr(ss);
     if (!jvr.begin_sequence()) {
       ACE_ERROR((LM_NOTICE, "NOTICE: HsdsCollectionResource::render_POST: begin_sequence failed!\n"));
@@ -321,7 +344,11 @@ public:
     return this->respond_with_no_content();
   }
 
-  const std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
+  std::shared_ptr<httpserver::http_response> render_GET(const httpserver::http_request& request) {
+    if (!ResourceBase::is_authorized(request)) {
+      return this->respond(ErrorResponse::make_unauthorized());
+    }
+
     size_t offset = 0;
     size_t count = this->unit_.container.size();
 
@@ -362,7 +389,11 @@ public:
     return response;
   }
 
-  const std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request&) {
+  std::shared_ptr<httpserver::http_response> render_DELETE(const httpserver::http_request& request) {
+    if (!ResourceBase::is_authorized(request)) {
+      return this->respond(ErrorResponse::make_unauthorized());
+    }
+
     ACE_GUARD_RETURN(ACE_Thread_Mutex, g, this->application_.get_mutex(),
                      this->respond(ErrorResponse::make_internal_server_error()));
     // Unregister.
